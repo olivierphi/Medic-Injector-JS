@@ -5,7 +5,8 @@
     // InjectionMapping
 
     var FORBIDDEN_INJECTIONS_NAMES = [
-        'callback'
+        'callback',
+        'injectionValue'
     ];
 
     /**
@@ -30,7 +31,7 @@
     /**
      *
      * @param value
-     * @return {InjectionMapping}
+     * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
      * @throws Error
      */
     InjectionMapping.prototype.toValue = function (value)
@@ -42,20 +43,20 @@
 
     /**
      *
-     * @param {Function} callback
-     * @return {InjectionMapping}
+     * @param {Function} injectionValueProviderFunction
+     * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
      * @throws Error
      */
-    InjectionMapping.prototype.toFunctionResult = function (callback)
+    InjectionMapping.prototype.toProvider = function (injectionValueProviderFunction)
     {
         this._sealed && this._throwSealedException();
-        this._toFunctionResult = callback;
+        this._toProvider = injectionValueProviderFunction;
         return this;
     };
 
     /**
      *
-     * @return {InjectionMapping}
+     * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
      * @throws Error
      */
     InjectionMapping.prototype.asSingleton = function ()
@@ -66,21 +67,11 @@
     };
 
     /**
-     * Seal this Injection mapping. Any subsequent call to any of the
-     * "toValue()", "toCallbackResult()" or "asSingleton()" methods will throw
-     * an Error.
-     * @return {InjectionMapping}
-     * @throws Error
-     */
-    InjectionMapping.prototype.seal = function ()
-    {
-        this._sealed && this._throwSealedException();
-        this._sealed = true;
-        return this;
-    };
-
-    /**
      * Resolves the injection mapping.
+     * When it's resolved, the callback function is triggered in the supplied context.
+     * The first arg of the triggered callback will be the injection value. If you have anothers
+     * args in the callback function, they will be inspected and may be filled with other injections values too,
+     * for each of these function arg whose name s the same that an existing InjectionMapping.
      *
      * @param {Function} callback
      * @param {Object/null} [context=null]
@@ -88,23 +79,76 @@
      */
     InjectionMapping.prototype.resolveInjection = function (callback, context, forceAsync)
     {
-        var triggerCallback = function(injectionValue) {
-            if (!forceAsync)
-                callback.call(context, injectionValue);
-            else
-                nextTick(function () {callback.call(context, injectionValue);});
-        };
-
         if (this._singletonValue) {
-            return triggerCallback(this._singletonValue);
+
+            // Simple and immediate callback trigger
+            this._triggerFunction(callback, [this._singletonValue], context, forceAsync);
+
         } else if (this._toValue) {
-            return triggerCallback(this._toValue);
-        }
 
-        if (this._toFunctionResult) {
-            this._resolveFunctionResultInjection(callback, context, forceAsync);
-        }
+            // Simple and immediate callback trigger
+            this._triggerFunction(callback, [this._toValue], context, forceAsync);
 
+        } else if (this._toProvider) {
+
+            // This InjectionMapping value is retrieved from a Provider function
+            // It's gonna be... well... a bit less simple :-)
+
+            if (this._asSingleton) {
+                // For "singletons" InjectionMappings, we trigger the Provider value only once,
+                // even if other resolutions are asked while it's being resolved
+                if (this._resolutionInProgress) {
+                    this._queuedResolutions.push({'cb': callback, 'ctx': context, 'async': forceAsync});
+                    return;//this Injection resolution is queued (it will be handled in "this._resolveProvider()"); we stop right now
+                } else {
+                    this._resolutionInProgress = true;
+                    this._queuedResolutions = [];//we will queue subsequent requests
+                }
+            }
+
+            this._resolveProvider(callback, context, forceAsync);
+
+        }
+    };
+
+    /**
+     * Seal this Injection mapping. Any subsequent call to any of the
+     * "toValue()", "toCallbackResult()" or "asSingleton()" methods will throw
+     * an Error.
+     * @return {Object} returns a "unseal" key ; the only way to unseal this InjectionMapping it to call its "unseal()" method with this key
+     * @throws Error
+     * @see #unseal()
+     */
+    InjectionMapping.prototype.seal = function ()
+    {
+        this._sealed && this._throwSealedException();
+        this._sealed = true;
+        this._sealKey = {};
+        return this._sealKey;
+    };
+
+    /**
+     * Reverts the effect of <code>seal</code>, makes the mapping changeable again.
+     *
+     * @param {Object} key The key to unseal the mapping. Has to be the instance returned by
+     * <code>seal()</code>
+     * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
+     * @throws Error Has to be invoked with the unique key object returned by an earlier call to <code>seal</code>
+     * @throws Error Can't unseal a mapping that's not sealed
+     * @see #seal()
+     */
+    InjectionMapping.prototype.unseal = function (key)
+    {
+        if (!this._sealed) {
+            throw new Error('Can\'t unseal a non-sealed mapping.');
+        }
+        if (key !== this._sealKey)
+        {
+            throw new InjectorError('Can\'t unseal mapping without the correct key.');
+        }
+        this._sealed = false;
+        this._sealKey = null;
+        return this;
     };
 
     /**
@@ -117,7 +161,7 @@
     };
 
     /**
-     * Recursive resolution of a "function result" injection. Any of this function's argument whose name is a registered
+     * Recursive resolution of a "provider" injection. Any of this provider function's argument whose name equals a registered
      * injection name will itself trigger a recursive injection resolution.
      *
      * @param {Function} callback
@@ -125,59 +169,120 @@
      * @param {Boolean/null} [forceAsync=false]
      * @private
      */
-    InjectionMapping.prototype._resolveFunctionResultInjection = function (callback, context, forceAsync)
+    InjectionMapping.prototype._resolveProvider = function (callback, context, forceAsync)
     {
-        var targetFunction = this._toFunctionResult;
-        var functionArgsNames = getArgumentNames(targetFunction);
-        var isAnAsyncFunction = (-1 < functionArgsNames.indexOf('callback')) ? true : false ;
+        var providerFunction = this._toProvider;
+        var providerArgsNames = getArgumentNames(providerFunction);
+        var callbackArgIndex = providerArgsNames.indexOf('callback');
+        var isAnAsyncFunction = (-1 < callbackArgIndex) ? true : false ;
 
-        myDebug && console && console.log('_resolveFunctionResultInjection() ; isAnAsyncFunction=', isAnAsyncFunction, ', functionArgsNames=', functionArgsNames);
+        myDebug && console && console.log('******** _resolveProvider() ; isAnAsyncFunction=', isAnAsyncFunction, ', providerArgsNames=', providerArgsNames);
 
         var that = this;//we don't bundle Underscore nor jQuery, so let's back to the good old "that = this" scope trick :-)
 
         // 2) This function will be triggered when all the required injections of the function will have been resolved
-        var onFunctionArgsInjectionsResolution = function (resolvedInjectionsValues)
+        var onProviderArgsInjectionsResolution = function (resolvedInjectionsValues)
         {
-            myDebug && console && console.log('_resolveFunctionResultInjection()#onFunctionArgsInjectionsResolution ; functionArgsNames=', functionArgsNames);
-            var injectionValue;
+            myDebug && console && console.log('_resolveFunctionResultInjection()#onProviderArgsInjectionsResolution ; providerArgsNames=', providerArgsNames);
 
             if (isAnAsyncFunction) {
-                // This function is async (it has a "callback" argument)
+                // This Provider is async (it has a "callback" argument)
                 // --> we trigger it right now and wait for the callback resolution (it will have the injection value as only argument)
-                var callbackArgIndex = functionArgsNames.indexOf('callback');
-                resolvedInjectionsValues[callbackArgIndex] = onFunctionResult;//we insert our callback in the function args
-                targetFunction.apply(null, resolvedInjectionsValues);
+                resolvedInjectionsValues[callbackArgIndex] = onProviderResult;//we insert our callback in the Provider "callback" arg
+                providerFunction.apply(null, resolvedInjectionsValues);
             } else {
-                // This function is not aysnc (it doesn't iteslf have a "callback" argument) ; the injection value is the return value of the callback
+                // This Provider is not aysnc (it doesn't iteslf have a "callback" argument) ; the injection value is the return value of the callback
                 // --> we trigger it right now and just retrieve its return value
-                injectionValue = targetFunction.apply(null, resolvedInjectionsValues);
-                onFunctionResult(injectionValue);
+                var injectionValue = providerFunction.apply(null, resolvedInjectionsValues);
+                onProviderResult(injectionValue);
             }
-
-
-            resolvedInjectionsValues.unshift(that._toFunctionResult);
         };
 
-        // 3) We have the function result : handle it and trigger the injection callback
-        var onFunctionResult = function (functionResultInjectionValue) {
-            myDebug && console && console.log('_resolveFunctionResultInjection()#onFunctionResult ; functionResultInjectionValue=', functionResultInjectionValue);
+        // 3) We have the Provider result : handle it and trigger the injection callback
+        var onProviderResult = function (providerReturnedValue) {
 
+            myDebug && console && console.log('_resolveFunctionResultInjection()#onFunctionResult ; providerReturnedValue=', providerReturnedValue);
             if (that._asSingleton) {
-                // now we will always use this return value for this Injection
-                that._singletonValue = functionResultInjectionValue;
+                // from now on, we will always use this return value for this Injection (it won't have to be resolved again)
+                that._singletonValue = providerReturnedValue;
             }
 
-            // Now we can call our Injection callback (it will be itself "injected") : the first param is always the injection value, the following ones are handled by the reflection/injection mechanism)
-            var callbackArgsNames = getArgumentNames(callback);
-            var onInjectionsResolution = function (resolvedInjectionsValues) {
-                resolvedInjectionsValues.unshift(functionResultInjectionValue);
-                callback.apply(context, resolvedInjectionsValues);
-            };
-            that._injector.resolveInjections(callbackArgsNames, onInjectionsResolution, context, forceAsync);
+            // Now we can call our Injection callback (it will be itself "injected")
+            that._triggerInjectionResolutionCallback(providerReturnedValue, callback, context, forceAsync);
+
+            // In "as singleton" mode we may have pending Injection Resolutions
+            // --> let's resolve them if needed
+            if (that._queuedResolutions && that._queuedResolutions.length > 0) {
+                for (var i = 0; i < that._queuedResolutions.length; i++) {
+                    var queuedResolution = that._queuedResolutions[i]
+                      , queuedResolutionCallback = queuedResolution['cb']
+                      , queuedResolutionContext = queuedResolution['ctx']
+                      , queuedResolutionForceAsync = queuedResolution['async'];
+                    that._triggerInjectionResolutionCallback(providerReturnedValue, queuedResolutionCallback, queuedResolutionContext, queuedResolutionForceAsync);
+                }
+                that._queuedResolutions = null;//garbage collection on queued callbacks
+            }
+            that._resolutionInProgress = false;
+
         };
 
         // 1) Okay, let's start with the resolution of the requested injections of this function...
-        this._injector.resolveInjections(functionArgsNames, onFunctionArgsInjectionsResolution);
+        this._injector.resolveInjections(providerArgsNames, onProviderArgsInjectionsResolution);
+
+    };
+
+    /**
+     *
+     * @param injectionResolvedValue
+     * @param {Function} callback
+     * @param {Object/null} [context=null]
+     * @param {Boolean/null} [forceAsync=false]
+     * @private
+     * @throws Error an Error will be thrown if the callback function have more than 1 arg and none of them is called "injectionName"
+     */
+    InjectionMapping.prototype._triggerInjectionResolutionCallback = function (injectionResolvedValue, callback, context, forceAsync)
+    {
+        var callbackArgsNames = getArgumentNames(callback);
+
+        if (2 > callbackArgsNames) {
+
+            // The InjectionMapping value callback only have 1 arg.
+            // --> this arg is simply filled with the resolved injection value!
+            this._triggerFunction(callback, [injectionResolvedValue], context, forceAsync);
+
+        } else {
+
+            // The InjectionMapping value callback have multiple args.
+            // --> we launch an injections resolution process on it, then we will trigger it.
+            // The injection value will be injected to its "injectionValue" arg
+            var injectionValueArgIndex = callbackArgsNames.indexOf('injectionValue');
+            if (-1 === injectionValueArgIndex) {
+                throw new Error('An injection resolution callback function with more than 1 argument *must* have a "injectionValue" arg!');
+            }
+            var that = this;//sorry...
+            var onInjectionsResolution = function (resolvedInjectionsValues) {
+                resolvedInjectionsValues[injectionValueArgIndex] = injectionResolvedValue;//we insert our injection value in the callback "injectionValue" arg
+                that._triggerFunction(callback, resolvedInjectionsValues, context, forceAsync);
+            };
+            this._injector.resolveInjections(callbackArgsNames, onInjectionsResolution, this);
+
+        }
+    };
+
+    /**
+     *
+     * @param {Function} func
+     * @param {Array} argsArray
+     * @param {Object/null} [context=null]
+     * @param {Boolean/null} [forceAsync=false]
+     * @private
+     */
+    InjectionMapping.prototype._triggerFunction = function (func, argsArray, context, forceAsync)
+    {
+        if (!forceAsync)
+            func.apply(context, argsArray);
+        else
+            nextTick(function () {func.apply(context, argsArray);});
     };
 
     /**
@@ -203,8 +308,8 @@
      */
     Injector.prototype.addMapping = function (injectionName)
     {
-        if (!!this._mappings[injectionName] && this._mappings[injectionName].isSealed()) {
-            throw new Error('Injection name "'+injectionName+'" is already used by a sealed InjectionMapping!');
+        if (!!this._mappings[injectionName]) {
+            throw new Error('Injection name "'+injectionName+'" is already used!');
         }
         var newInjectionMapping = new InjectionMapping(this, injectionName);
         this._mappings[injectionName] = newInjectionMapping;
@@ -213,6 +318,34 @@
 
     /**
      *
+     * @param {String} injectionName
+     * @return {Injector}
+     * @throws Error An Error is thrown if the target InjectionMapping has been sealed
+     */
+    Injector.prototype.removeMapping = function (injectionName)
+    {
+        if (!!this._mappings[injectionName] && this._mappings[injectionName].isSealed()) {
+            throw new Error('Injection name "'+injectionName+'" is sealed and cannot be removed!');
+        }
+        delete this._mappings[injectionName];
+        return this;
+    };
+
+    /**
+     *
+     * @param {String} injectionName
+     * @return {Boolean}
+     */
+    Injector.prototype.hasMapping = function (injectionName)
+    {
+        return !!this._mappings[injectionName];
+    };
+
+    /**
+     * Triggers the target function with the supplied context.
+     * The function args are parsed, and for each of these args whose name equals a registered InjectionMapping name
+     * the injection will be resolved and its value will fill the matching function arg value.
+     *
      * @param {Function} func
      * @param {Object/null} [context=null]
      * @param {Boolean/null} [forceAsync=false]
@@ -220,11 +353,15 @@
     Injector.prototype.triggerFunctionWithInjectedParams = function (func, context, forceAsync)
     {
         myDebug && console && console.log('triggerFunctionWithInjectedParams() ; func=', func);
-        var callbackArgsNames = getArgumentNames(func);
+        var functionArgsNames = getArgumentNames(func);
         var onInjectionsResolution = function (resolvedInjectionsValues) {
-            func.apply(context, resolvedInjectionsValues);
+            if (!forceAsync) {
+                func.apply(context, resolvedInjectionsValues);
+            } else {
+                nextTick(function () { func.call(context, resolvedInjectionsValues); });
+            }
         };
-        this.resolveInjections(callbackArgsNames, onInjectionsResolution, context, forceAsync);
+        this.resolveInjections(functionArgsNames, onInjectionsResolution, this);
     };
 
 
@@ -233,9 +370,8 @@
      * @param {Array} injectionsNamesArray an Array of Strings
      * @param {Function} callback Will be triggered when all injections are resolved ; it will receive an Array of resolved injections (with `null` for each arg whose name is not a registered injection name)
      * @param {Object/null} [context=null]
-     * @param {Boolean/null} [forceAsync=false]
      */
-    Injector.prototype.resolveInjections = function (injectionsNamesArray, callback, context, forceAsync)
+    Injector.prototype.resolveInjections = function (injectionsNamesArray, callback, context)
     {
         myDebug && console && console.log('resolveInjections() ; injectionsNamesArray=', injectionsNamesArray);
         var resolvedInjectionPoints = [];
@@ -258,10 +394,7 @@
         var triggerCallback = function ()
         {
             myDebug && console && console.log('resolveInjections()#triggerCallback');
-            if (!forceAsync)
-                callback.call(context, resolvedInjectionPoints);
-            else
-                nextTick(function () { callback.call(context, resolvedInjectionPoints); });
+            callback.call(context, resolvedInjectionPoints);
         };
 
         var that = this;//    :-/
@@ -275,7 +408,7 @@
 
         if (0 === nbInjectionsPointsToResolve)
         {
-            // No arg for this callback ; immediate triggering!
+            // No arg for this callback ; immediate trigger!
             triggerCallback();
             return;
         }
