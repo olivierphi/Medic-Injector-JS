@@ -1,3 +1,12 @@
+/*
+ * This file is part of the Medic-Injector library.
+ *
+ * (c) Olivier Philippon <https://github.com/DrBenton>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 (function(context) {
 
     var myDebug = false;
@@ -72,6 +81,23 @@
     };
 
     /**
+     * Maps an injection value to the result of a module.
+     * Use this only in Node.js or AMD environments (needs the presence of a global "require" function).
+     * @see https://github.com/amdjs/amdjs-api/wiki/AMD
+     *
+     * @param {String} modulePathToRequire
+     * @param {String} [targetModulePropertyName=null]
+     * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
+     * @throws Error
+     */
+    InjectionMapping.prototype.toModule = function (modulePathToRequire, targetModulePropertyName)
+    {
+        this._sealed && this._throwSealedException();
+        this._toModule = {'path': modulePathToRequire, 'prop': targetModulePropertyName || null};
+        return this;
+    };
+
+    /**
      *
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
      * @throws Error
@@ -118,6 +144,7 @@
         } else if (this._toProvider) {
 
             // This InjectionMapping value is retrieved from a Provider function
+            // This Provider function may itself ask for other injections, and it can be asynchronous.
             // It's gonna be... well... a bit less simple :-)
 
             if (this._asSingleton) {
@@ -133,6 +160,10 @@
             }
 
             this._resolveProvider(callback, context, forceAsync);
+
+        } else if (this._toModule) {
+
+            this._resolveModule(callback, context, forceAsync);
 
         }
     };
@@ -291,6 +322,44 @@
             this._injector.resolveInjections(callbackArgsNames, onInjectionsResolution, this);
 
         }
+    };
+
+    /**
+     *
+     * @param {Function} callback
+     * @param {Object} [context=null]
+     * @param {Boolean} [forceAsync=false]
+     * @private
+     */
+    InjectionMapping.prototype._resolveModule = function (callback, context, forceAsync)
+    {
+        if (typeof require === "undefined") {
+            throw new Error('Module resolution can be used only when a global "require" method exists (i.e. in Node.js or when using AMD');
+        }
+
+        if (typeof module !== "undefined" && typeof process !== "undefined") {
+
+            // Node.js
+            // --> instant resolution
+            var moduleResult = require(this._toModule.path);
+            if (null !== this._toModule.prop) {
+                moduleResult = moduleResult[this._toModule.prop];
+            }
+            this._triggerFunction(callback, [moduleResult], context, forceAsync);
+
+        } else {
+
+            // AMD
+            // --> asynchronous resolution
+            require([moduleResult], bind(function(moduleResult) {
+                if (null !== this._toModule.prop) {
+                    moduleResult = moduleResult[this._toModule.prop];
+                }
+                this._triggerFunction(callback, [moduleResult], context, forceAsync);
+            }, this));
+
+        }
+
     };
 
     /**
@@ -475,6 +544,24 @@
     };
 
     /**
+     * Set the value of all public properties of the target JS object whose name is an injection mapping to "null".
+     * This lets you cancel the effect of #injectInto for clean garbage collection.
+     *
+     * @param {Object} jsTypeInstance
+     */
+    Injector.prototype.cancelInjectionsInto = function (jsTypeInstance)
+    {
+        // Let's scan this JS object instance for injection points...
+        for (var propName in jsTypeInstance) {
+            if (!!this._mappings[propName]) {
+                // This instance property's name matches a registered injection name
+                // --> let's cancel this injection point
+                jsTypeInstance[propName] = null;
+            }
+        }
+    };
+
+    /**
      *
      * @param {Array} injectionsNamesArray an Array of Strings
      * @param {Function} callback Will be triggered when all injections are resolved ; it will receive an Array of resolved injections (with `null` for each arg whose name is not a registered injection name)
@@ -494,8 +581,7 @@
             callback.call(context, resolvedInjectionPoints);
         };
 
-        if (0 === nbInjectionsPointsToResolve)
-        {
+        if (0 === nbInjectionsPointsToResolve) {
             // No arg for this callback ; immediate trigger!
             triggerCallback();
             return;
@@ -553,7 +639,7 @@
     // Utils
 
     /**
-     * "nextTick" function from Q's source code
+     * "nextTick" function from Q source code
      * @see https://raw.github.com/kriskowal/q/master/q.js
      *
      * Copyright 2009-2012 Kris Kowal under the terms of the MIT

@@ -338,6 +338,29 @@ describe('InjectionMapping', function(){
         });
     });// end "#toType()" tests
 
+    describe('#toModule()', function(){
+        it('should immediately return a module result in Node.js', function(){
+            var injector = new Injector();
+            var counter = 0;
+            var injectionMapping = injector.addMapping('test').toModule('util');
+            injectionMapping.resolveInjection(function (injectionValue) {
+                assert.strictEqual(require('util'), injectionValue);
+                assert.strictEqual(0, counter);
+            });
+            counter++;
+        });
+        it('should immediately return a module sub-property result in Node.js when the "targetModulePropertyName" arg is used.', function(){
+            var injector = new Injector();
+            var counter = 0;
+            var injectionMapping = injector.addMapping('test').toModule('util', 'format');
+            injectionMapping.resolveInjection(function (injectionValue) {
+                assert.strictEqual(require('util').format, injectionValue);
+                assert.strictEqual(0, counter);
+            });
+            counter++;
+        });
+    });// end "#toModule()" tests
+
     describe('#seal()/#unseal()', function(){
         it('should seal', function(){
             var injector = new Injector();
