@@ -1,5 +1,7 @@
 # Medic Injector
 
+[![build status](https://secure.travis-ci.org/DrBenton/Medic-Injector-JS.png)](http://travis-ci.org/DrBenton/Medic-Injector-JS)
+
 As a web developer since 1999, one of the technology I enjoyed most working with has been the great [RobotLegs](http://www.robotlegs.org/)
 ActionScript framework and its [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
 Today I work mostly on Javascript projets, both in Node.js and in browsers, and I was cruelly missing the "RobotLegs" simple
