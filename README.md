@@ -17,7 +17,7 @@ It is a very agnostic tool, which can be used in Express server-side application
 There are two main phases to properly use this library : a "injection mappings" setup, then a "injections points" use in your
 whole application.
 
-In the first phase, you create "injection mappings". Each injection mapping has a unique ID, and is linked to a value.
+During the first phase, you create "injection mappings". Each injection mapping has a unique ID, and is linked to a value.
 This value can be a Javascript scalar or object, but it can be bound to a more complex data source, like an asynchronous
 resource or a Node.js / AMD module. But we will see that later, for now let's look at the simplest dependency injection
 scheme:
@@ -27,7 +27,7 @@ scheme:
 var Injector = require('medic-injector');//with AMD you would use "require(['medic-injector'], function() { /*your code*/ })" instead
 var injector = new Injector();
 
-injector.addMapping('debug').toValue(true);
+injector.addMapping('debug').toValue(true);//a first simple Injection Mapping
 
 // Later in you application code
 function displayHomepage (debug) {
@@ -65,7 +65,7 @@ After this "injectInto()" call, our Logger instance will have its "debug" proper
         // If an "injected" object instance has a "postInjections" method, it will be automatically triggered
         // after the injections resolution (injections mapping can be asynchronous).
         // It can be considered as a "second constructor", called when you object instance is really ready, with all its
-        / injected dependencies resolved.
+        // injected dependencies resolved.
         this.dispatchEvent('ready');
      };
 
