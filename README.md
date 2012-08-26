@@ -3,7 +3,7 @@
 [![build status](https://secure.travis-ci.org/DrBenton/Medic-Injector-JS.png)](http://travis-ci.org/DrBenton/Medic-Injector-JS)
 
 As a web developer since 1999, one of the technologies I have loved the most has been the great [RobotLegs](http://www.robotlegs.org/)
-ActionScript framework and its [SwiftSuspenders](https://tgithub.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
+ActionScript framework and its [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
 Today I work mostly on Javascript projets, both in Node.js and in browsers, and I was cruelly missing the "RobotLegs" simple
 and yet so efficient way of wiring application components together. This is why I made this tiny Javascript library, which
 is a kind of a portage of SwiftSuspenders to Javascript.
