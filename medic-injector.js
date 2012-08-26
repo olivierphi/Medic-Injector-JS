@@ -11,7 +11,9 @@
 
     var myDebug = false;
 
-    // InjectionMapping
+    /**
+     * @class InjectionMapping
+     */
 
     var FORBIDDEN_INJECTIONS_NAMES = [
         'callback',
@@ -19,11 +21,11 @@
     ];
 
     /**
+     * You cant' use this constructor directly. Use #Injector.addMapping to create a new Injection Mapping.
      *
+     * @constructor
      * @param {Injector} injectorInstance
      * @param {String} injectionName
-     * @throws Error
-     * @constructor
      */
     var InjectionMapping = function (injectorInstance, injectionName)
     {
@@ -38,10 +40,14 @@
     };
 
     /**
+     * The simplest Injection Mapping type : each time a component will request this Injection Mapping injection, the
+     * target value will be injected.
+     * Since this value is a plain Javascript scalar, Array or Object, it's shared in all the application and calling
+     * #asSingleton on such an Injection Mapping is useless.
      *
      * @param value
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws Error
+     * @throws {Error}
      */
     InjectionMapping.prototype.toValue = function (value)
     {
@@ -51,10 +57,12 @@
     };
 
     /**
+     * The Injection Mapping value will be resolved through a Provider function.
+     * If this function has a "callback" argument, it will be considered as an asynchronous Provider.
      *
      * @param {Function} injectionValueProviderFunction
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws Error
+     * @throws {Error}
      */
     InjectionMapping.prototype.toProvider = function (injectionValueProviderFunction)
     {
@@ -64,10 +72,13 @@
     };
 
     /**
+     * Each time this Injection Mapping value will be requested, a new instance of the target Javascript type will
+     * be created.
+     * Use it with #asSingleton() to map a lazy-loaded shared instance to this Injection Mapping.
      *
      * @param {Function} javascriptType
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws Error
+     * @throws {Error}
      */
     InjectionMapping.prototype.toType = function (javascriptType)
     {
@@ -88,7 +99,7 @@
      * @param {String} modulePathToRequire
      * @param {String} [targetModulePropertyName=null]
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws Error
+     * @throws {Error}
      */
     InjectionMapping.prototype.toModule = function (modulePathToRequire, targetModulePropertyName)
     {
@@ -98,9 +109,11 @@
     };
 
     /**
+     * When this method is called on an Injection Mapping, its resolution will be triggered the first time it is
+     * requested, but any subsequent call will use this first-time resolved value.
      *
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws Error
+     * @throws {Error}
      */
     InjectionMapping.prototype.asSingleton = function ()
     {
@@ -141,14 +154,15 @@
             }
             this._triggerFunction(callback, [newTypeInstance], context, forceAsync);
 
-        } else if (this._toProvider) {
+        } else if (this._toProvider || this._toModule) {
 
-            // This InjectionMapping value is retrieved from a Provider function
-            // This Provider function may itself ask for other injections, and it can be asynchronous.
-            // It's gonna be... well... a bit less simple :-)
+            // These InjectionMapping value are retrieved from more complex data sources.
+            // The Provider function may itself ask for other injections, and it can be asynchronous.
+            // The Module resolution can be be asynchronous too, in a AMD context.
+            // So,this is gonna be... well... a bit less simple :-)
 
             if (this._asSingleton) {
-                // For "singletons" InjectionMappings, we trigger the Provider value only once,
+                // For "singletons" InjectionMappings, we trigger the Provider/Module value only once,
                 // even if other resolutions are asked while it's being resolved
                 if (this._resolutionInProgress) {
                     this._queuedResolutions.push({'cb': callback, 'ctx': context, 'async': forceAsync});
@@ -159,21 +173,22 @@
                 }
             }
 
-            this._resolveProvider(callback, context, forceAsync);
-
-        } else if (this._toModule) {
-
-            this._resolveModule(callback, context, forceAsync);
+            if (this._toProvider) {
+                this._resolveProvider(callback, context, forceAsync);
+            } else if (this._toModule) {
+                this._resolveModule(callback, context, forceAsync);
+            }
 
         }
     };
 
     /**
      * Seal this Injection mapping. Any subsequent call to any of the
-     * "toValue()", "toCallbackResult()" or "asSingleton()" methods will throw
+     * #toValue, "toProvider()", "toModule" or "asSingleton()" methods will throw
      * an Error.
+     *
      * @return {Object} returns a "unseal" key ; the only way to unseal this InjectionMapping it to call its "unseal()" method with this key
-     * @throws Error
+     * @throws {Error}
      * @see #unseal()
      */
     InjectionMapping.prototype.seal = function ()
@@ -190,8 +205,8 @@
      * @param {Object} key The key to unseal the mapping. Has to be the instance returned by
      * <code>seal()</code>
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws Error Has to be invoked with the unique key object returned by an earlier call to <code>seal</code>
-     * @throws Error Can't unseal a mapping that's not sealed
+     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to <code>seal</code>
+     * @throws {Error} Can't unseal a mapping that's not sealed
      * @see #seal()
      */
     InjectionMapping.prototype.unseal = function (key)
@@ -258,27 +273,13 @@
 
             myDebug && console && console.log('_resolveFunctionResultInjection()#onFunctionResult ; providerReturnedValue=', providerReturnedValue);
 
-            if (this._asSingleton) {
-                // from now on, we will always use this return value for this Injection (it won't have to be resolved again)
-                this._singletonValue = providerReturnedValue;
-            }
-
             // Now we can call our Injection callback (it will be itself "injected")
             this._triggerInjectionResolutionCallback(providerReturnedValue, callback, context, forceAsync);
 
-            // In "as singleton" mode we may have pending Injection Resolutions
-            // --> let's resolve them if needed
-            if (this._queuedResolutions && this._queuedResolutions.length > 0) {
-                for (var i = 0; i < this._queuedResolutions.length; i++) {
-                    var queuedResolution = this._queuedResolutions[i]
-                      , queuedResolutionCallback = queuedResolution['cb']
-                      , queuedResolutionContext = queuedResolution['ctx']
-                      , queuedResolutionForceAsync = queuedResolution['async'];
-                    this._triggerInjectionResolutionCallback(providerReturnedValue, queuedResolutionCallback, queuedResolutionContext, queuedResolutionForceAsync);
-                }
-                this._queuedResolutions = null;//garbage collection on queued callbacks
+            if (this._asSingleton) {
+                // from now on, we will always use this return value for this Injection (it won't have to be resolved again)
+                this._onAsyncResolutionInSingletonMode(providerReturnedValue);
             }
-            this._resolutionInProgress = false;
 
         }, this);
 
@@ -290,11 +291,37 @@
     /**
      *
      * @param injectionResolvedValue
+     * @private
+     */
+    InjectionMapping.prototype._onAsyncResolutionInSingletonMode = function (injectionResolvedValue)
+    {
+
+        this._singletonValue = injectionResolvedValue;
+
+        // In "as singleton" mode we may have pending Injection Resolutions
+        // --> let's resolve them if needed
+        if (this._queuedResolutions && this._queuedResolutions.length > 0) {
+            for (var i = 0; i < this._queuedResolutions.length; i++) {
+                var queuedResolution = this._queuedResolutions[i]
+                    , queuedResolutionCallback = queuedResolution['cb']
+                    , queuedResolutionContext = queuedResolution['ctx']
+                    , queuedResolutionForceAsync = queuedResolution['async'];
+                this._triggerInjectionResolutionCallback(injectionResolvedValue, queuedResolutionCallback, queuedResolutionContext, queuedResolutionForceAsync);
+            }
+            this._queuedResolutions = null;//garbage collection on queued callbacks
+        }
+        this._resolutionInProgress = false;
+
+    };
+
+    /**
+     *
+     * @param injectionResolvedValue
      * @param {Function} callback
      * @param {Object} [context=null]
      * @param {Boolean} [forceAsync=false]
      * @private
-     * @throws Error an Error will be thrown if the callback function have more than 1 arg and none of them is called "injectionName"
+     * @throws {Error} an Error will be thrown if the callback function have more than 1 arg and none of them is called "injectionName"
      */
     InjectionMapping.prototype._triggerInjectionResolutionCallback = function (injectionResolvedValue, callback, context, forceAsync)
     {
@@ -388,19 +415,27 @@
     };
 
     // Injector
-
+    /**
+     * Creates a new Injector instance.
+     *
+     * @class Injector
+     * @constructor
+     * @return {Injector}
+     */
     var Injector = function ()
     {
         this._mappings = {};
+        return this;
     };
 
     /**
-     *
-     * @type {String}
+     * The name of the function to trigger in a custom JS type instance after the resolution of all its Injections Points.
+     * @property {String}
      */
     Injector.prototype.instancePostInjectionsCallbackName = 'postInjections';
 
     /**
+     * Adds a new InjectionMapping to the Injector.
      *
      * @param {String} injectionName
      * @return {InjectionMapping}
@@ -416,10 +451,11 @@
     };
 
     /**
+     * Removes an existing InjectionMapping.
      *
      * @param {String} injectionName
      * @return {Injector}
-     * @throws Error An Error is thrown if the target InjectionMapping has been sealed
+     * @throws {Error} An Error is thrown if the target InjectionMapping has been sealed
      */
     Injector.prototype.removeMapping = function (injectionName)
     {
@@ -626,12 +662,13 @@
     // Library export
 
     if (typeof exports !== 'undefined') {
-        exports.MedicInjectionMapping = InjectionMapping;
+        if (typeof module !== 'undefined' && module.exports) {
+            exports = module.exports = Injector;
+        }
         exports.MedicInjector = Injector;
     } else if (typeof define === "function" && define.amd) {
-        define('medic-injector', [], function () { return {'InjectionMapping': InjectionMapping, 'Injector': Injector}; } );
+        define('medic-injector', [], function () { return Injector; } );
     } else {
-        context['MedicInjectionMapping'] = InjectionMapping;
         context['MedicInjector'] = Injector;
     }
 
@@ -639,6 +676,8 @@
     // Utils
 
     /**
+     * @private
+     *
      * "nextTick" function from Q source code
      * @see https://raw.github.com/kriskowal/q/master/q.js
      *
@@ -703,8 +742,9 @@
      * Prototype is freely distributable under the terms of an MIT-style license.
      * For details, see the Prototype web site: http://www.prototypejs.org/
      *
-     * @param fun
+     * @param {Function} fun
      * @return {Array}
+     * @private
      */
     var getArgumentNames = function (fun)
     {
@@ -715,6 +755,13 @@
     };
 
     // Functions scope binding
+    /**
+     *
+     * @param {Function} func
+     * @param {Object} context
+     * @return {Function}
+     * @private
+     */
     var bind = function (func, context)
     {
         var args = Array.prototype.slice.call(arguments, 2);

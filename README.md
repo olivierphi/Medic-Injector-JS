@@ -1,15 +1,137 @@
 # Medic Injector
 
-One of my greatest pleasure as a web developer has been to work with the great [RobotLegs](http://www.robotlegs.org/)
+As a web developer since 1999, one of the technology I enjoyed most working with has been the great [RobotLegs](http://www.robotlegs.org/)
 ActionScript framework and its [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
-These days I do not use Flash ActionScript anymore, but I was missing RobotLegs and SwiftSuspenders so much that I had
-to rebuild this minimalist IoC management library in Javascript , strongly inspired by these 2 tools,
-in order to find this pleasure again. I hope you wil enjoy it too ! :-)
+Today I work mostly on Javascript projets, both in Node.js and in browsers, and I was cruelly missing the "RobotLegs" simple
+and yet so efficient way of wiring application components together. This is why I made this tiny Javascript library, which
+is a kind of a portage of SwiftSuspenders to Javascript.
 
-It allows to wire you application components in an easy, intuitive and efficient way. It can be used in Node.js and in
-the browser. If you use [Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD) in your client-side
-Javascript app, it will be particulary easy to add Medic Injector. It is a very agnostic tool, which can be used in
-Express server-side applications, Backbone browser-side applications, etc.
+It can be used in Node.js and in the browser. If you use [Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD)
+in your client-side Javascript app, it will be particulary easy to add Medic Injector.
+It is a very agnostic tool, which can be used in Express server-side applications, Backbone browser-side applications, etc.
+
+## Tutorial
+
+There are two phases to properly use this library : a "injection mappings" setup, then a "injections points" use in your
+whole application.
+
+In the first phase, you create "injection mappings". Each injection mapping has a unique ID, and is linked to a value.
+This value can be a Javascript scalar or object, but it can be bound to a more complex data source, like an asynchronous
+resource or a Node.js / AMD module. But we will see that later, for now let's look at the simplest dependency injection
+scheme:
+```javascript
+
+// Injector instance creation
+var Injector = require('medic-injector');//with AMD you would use "require(['medic-injector'], function() { /*your code*/ })" instead
+var injector = new Injector();
+
+injector.addMapping('debug').toValue(true);
+
+// Later in you application code
+function displayHomepage (debug) {
+    render debug ? 'home.debug.html' : 'home.html;
+}
+
+// And later again
+injector.triggerFunctionWithInjectedParams(displayHomepage);
+```
+
+What did we do? We just created an instance of a Medic Injector, and added a single Injection Mapping to , with a 'debug'
+unique ID and a simple boolean value.
+Later in the code, we asked the Injector to trigger a previously defined function. When it does this, it quickly parses
+the arguments of the requested function, and for each argument it looks if an injection mapping has been registered with
+an ID matching the argument name. When an argument name matches an injection mapping ID, the value of the injection mapping
+will be automatically injected in this argument.
+
+We can also use injections points in a OOP code. With the same setup than the previous example, we can do this :
+```javascript
+var Logger = function ()
+{
+    this.debug = null;
+};
+var logger = new Logger();
+injector.injectInto(logger);
+```
+
+After this "injectInto()" call, our Logger instance will have its "debug" property set to 'true'. The Logger can even
+ call the injector itself:
+ ```javascript
+ var Logger = function ()
+ {
+     this.debug = null;
+     this.postInjections = function () {
+        // If an "injected" object instance has a "postInjections" method, it will be automatically triggered
+        // after the injections resolution (injections mapping can be asynchronous).
+        // It can be considered as a "second constructor", called when you object instance is really ready, with all its
+        / injected dependencies resolved.
+        this.dispatchEvent('ready');
+     };
+
+     injector.injectInto(this);
+ };
+ ```
+
+Ok, this 'debug' property was not a very interesting injection. Let's see something more advanced:
+
+ ```javascript
+// a new "value" Injection Mapping...
+injector.addMapping('appConfig').toValue({
+    mode: 'development',
+    db: {host: 'localhost', db: 'test'},
+    mail: {host: 'smtp.gmail.com', user: 'webmaster@test.com', password: ''},
+});
+
+// ...and a new type of Injection Mapping, used with the "toProvider" method
+injector.addMapping('csrf').toProvider(function () {
+    return CsrfGenerator.getNewToken();
+});
+```
+The 'csrf' injection mapping is not linked to a simple value, but to a "Provider" return value. A Provider is simply
+a function that returns a value, immediatly like the 'csrf' one or asynchronously.
+Each time a function used with the Injector will have a 'csrf' argument or a custom Javascript type will have a 'csrf'
+property initially set to 'null', the injector will set this argument/property value to a new
+[CSRF token](http://en.wikipedia.org/wiki/Cross-site_request_forgery).
+
+What if our 'CsrfGenerator' has an asynchronous flow ? Well, it's simple, you just have to add a 'callback' argument
+to your Provider function, and the Medic Injector will consider the Provider as an asynchronous one. In such a cas,
+instead of getting the return value of your Provider it will wait for a 'callback' call. When this function will be
+triggered by your Provider, it will have to call it with a single argument, which will be considered as the Injection Mapping
+value:
+```javascript
+injector.addMapping('csrf').toProvider(function (callback) {
+    CsrfGenerator.getNewToken(function (err, result) {
+        err && throw err;
+        callback(result);//the 'result' value will be our 'csrf' Injection Mapping value.
+    });
+});
+```
+Note that this Provider will be triggered each time this Injection Mapping is requested by one of your functions or one
+of your JS custome types. For some mappings you will probably want to trigger the Provider only once. Well, that's simple,
+you just have to add a "asSingleton()" call to your Injection Mapping:
+```javascript
+// DB connection : it will be "lazy-triggered", only when the injection mapping is requested for the first time
+injector.addMapping('db')
+    .toProvider(function (appConfig) {//the previously defined "app config" will be automatically injected in this provider
+        var mongoose = require('mongoose');
+        var db = mongoose.createConnection(appConfig.db.host, appConfig.db.db);
+        return db;
+    })
+    .asSingleton();//shared singleton instance
+```
+As you can see, we have define a 'db' Injection Mapping, which will return a new MongoDB connection. Because we used the
+"asSingleton()" method, it will be created only when it is first requested, and then the same shared instance will always be
+injected.
+
+You may have noticed on the last example that the Provider has a "appConfig" argument, used in the Provider.
+That's a key feature of the Medic Injector : all Injections Mappings can themselves  recursively request others
+Injections Mapping, just by using Injections Mappings IDS in their Provider function argument. This system can handle as many
+Injections Mappings nested levels as you need, and handle asynchonous ones automatically.
+
+For asynchronous Providers you can mix the "callback" argument with others injections depencies arguments.
+
+Now that you've seen these simple examples, you may take a look at the following synopsis, which use all this and introduce
+a new Injection Mapping type, used with the "toModule()" method.
+
 
 ## Synopsis
 
@@ -110,12 +232,20 @@ module.exports = SubscribeForm;
 
 ## Documentation
 
-Coming soon...
+A full documentation will come soon.
+For now you can generate it with [JSDuck](https://github.com/senchalabs/jsduck) :
+
+    $ jsduck --output docs/ medic-injector.js
 
 
 ## Running Tests
 
-To run the test suite just invoke the following command within the repo:
+To run the test suite you will need to have the [Mocha](http://visionmedia.github.com/mocha/) library globally installed.
+If you don't already have it, just invoke the following command:
+
+    $ npm install -g mocha
+
+Then invoke this command within the Medic Injector folder:
 
     $ npm test
 
