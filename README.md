@@ -2,8 +2,8 @@
 
 [![build status](https://secure.travis-ci.org/DrBenton/Medic-Injector-JS.png)](http://travis-ci.org/DrBenton/Medic-Injector-JS)
 
-As a web developer since 1999, one of the technology I enjoyed most working with has been the great [RobotLegs](http://www.robotlegs.org/)
-ActionScript framework and its [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
+As a web developer since 1999, one of the technologies I have loved the most has been the great [RobotLegs](http://www.robotlegs.org/)
+ActionScript framework and its [SwiftSuspenders](https://tgithub.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
 Today I work mostly on Javascript projets, both in Node.js and in browsers, and I was cruelly missing the "RobotLegs" simple
 and yet so efficient way of wiring application components together. This is why I made this tiny Javascript library, which
 is a kind of a portage of SwiftSuspenders to Javascript.
@@ -14,7 +14,7 @@ It is a very agnostic tool, which can be used in Express server-side application
 
 ## Tutorial
 
-There are two phases to properly use this library : a "injection mappings" setup, then a "injections points" use in your
+There are two main phases to properly use this library : a "injection mappings" setup, then a "injections points" use in your
 whole application.
 
 In the first phase, you create "injection mappings". Each injection mapping has a unique ID, and is linked to a value.
