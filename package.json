@@ -1,7 +1,7 @@
 {
     "name": "medic-injector",
     "description": "A light-weight Javascript Dependency Injection tool, strongly inspired by the great ActionScript3 RobotLegs & SwiftSuspenders frameworks",
-    "version": "0.2",
+    "version": "0.2.0",
     "homepage": "https://github.com/DrBenton/Medic-Injector-JS",
     "repository": {
         "type": "git",
