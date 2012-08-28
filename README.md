@@ -4,7 +4,7 @@
 
 Medic Injector is a Javascript transcription of the great [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders)
 light-weight ActionScript IoC container - coupled with the [RobotLegs](http://www.robotlegs.org/) framework, it's one of the
-technologies I enjoyed the most, and I hope you will have the same pleasure with this Javascript portage!
+technologies I enjoyed the most, and I hope you will enjoy using this Javascript portage too!
 
 It lets you wire your application components in a very simple and intuitive way.
 
@@ -15,6 +15,8 @@ It can be used in Node.js and in the browser. If you use [Asynchronous Module De
 in your client-side Javascript app, it will be particulary easy to add Medic Injector.
 It is a very agnostic tool, which can be used in vanilla JS, Express server-side applications,
 Backbone browser-side applications, etc.
+
+It is bundled with Unit Tests and [API documentation](http://drbenton.github.com/Medic-Injector-JS/api/).
 
 ## Tutorial
 
@@ -237,6 +239,8 @@ module.exports = SubscribeForm;
 ```
 
 ## API
+
+See te API here : http://drbenton.github.com/Medic-Injector-JS/api/
 
 The API is generated with [JSDuck](https://github.com/senchalabs/jsduck) with the following command:
 
