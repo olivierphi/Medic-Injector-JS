@@ -2,15 +2,19 @@
 
 [![build status](https://secure.travis-ci.org/DrBenton/Medic-Injector-JS.png)](http://travis-ci.org/DrBenton/Medic-Injector-JS)
 
-As a web developer since 1999, one of the technologies I have loved the most has been the great [RobotLegs](http://www.robotlegs.org/)
-ActionScript framework and its [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders) light-weight IoC container.
-Today I work mostly on Javascript projets, both in Node.js and in browsers, and I was cruelly missing the "RobotLegs" simple
-and yet so efficient way of wiring application components together. This is why I made this tiny Javascript library, which
-is a kind of a portage of SwiftSuspenders to Javascript.
+Medic Injector is a Javascript transcription of the great [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders)
+light-weight ActionScript IoC container - coupled with the [RobotLegs](http://www.robotlegs.org/) framework, it's one of the
+technologies I enjoyed the most, and I hope you will have the same pleasure with this Javascript portage!
+
+It lets you wire your application components in a very simple and intuitive way.
+
+You setup your Injection Mappings once, and then use them everywhere you want in your application, without any overhead -
+Injections Points are recognized only from functions arguments names and Javascript objects instances properties names.
 
 It can be used in Node.js and in the browser. If you use [Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD)
 in your client-side Javascript app, it will be particulary easy to add Medic Injector.
-It is a very agnostic tool, which can be used in Express server-side applications, Backbone browser-side applications, etc.
+It is a very agnostic tool, which can be used in vanilla JS, Express server-side applications,
+Backbone browser-side applications, etc.
 
 ## Tutorial
 
@@ -31,7 +35,7 @@ injector.addMapping('debug').toValue(true);//a first simple Injection Mapping
 
 // Later in you application code
 function displayHomepage (debug) {
-    render debug ? 'home.debug.html' : 'home.html;
+    render debug ? 'home.debug.html' : 'home.html';
 }
 
 // And later again
@@ -232,12 +236,11 @@ module.exports = SubscribeForm;
 
 ```
 
-## Documentation
+## API
 
-A full documentation will come soon.
-For now you can generate it with [JSDuck](https://github.com/senchalabs/jsduck) :
+The API is generated with [JSDuck](https://github.com/senchalabs/jsduck) with the following command:
 
-    $ jsduck --output docs/ medic-injector.js
+    $ jsduck --output docs/api/ medic-injector.js
 
 
 ## Running Tests

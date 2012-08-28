@@ -5,6 +5,9 @@
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
+ *
+ * Strongly inspired by the SwiftSuspenders (https://github.com/tschneidereit/SwiftSuspenders)
+ * ActionScript 3 library.
  */
 
 (function(context) {
@@ -21,11 +24,13 @@
     ];
 
     /**
-     * You cant' use this constructor directly. Use #Injector.addMapping to create a new Injection Mapping.
+     * You cant' use this constructor directly. Use Injector.addMapping to create a new Injection Mapping.
      *
+     * @class InjectionMapping
      * @constructor
      * @param {Injector} injectorInstance
      * @param {String} injectionName
+     * @return {InjectionMapping}
      */
     var InjectionMapping = function (injectorInstance, injectionName)
     {
@@ -36,6 +41,10 @@
             throw new Error('Injection name "'+injectionName+'" is forbidden');
         }
         this._injector = injectorInstance;
+        /**
+         *
+         * @type {String}
+         */
         this.injectionName = injectionName;
     };
 
@@ -224,7 +233,7 @@
     };
 
     /**
-     *
+     * If the #seal method has been called on this InjectionMapping, returns `true`
      * @return {Boolean}
      */
     InjectionMapping.prototype.isSealed = function ()
