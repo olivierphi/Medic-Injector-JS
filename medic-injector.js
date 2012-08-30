@@ -566,6 +566,8 @@
                         callback && callback.apply(callbackContext);//callback is triggered right after instance post injection hook
                     });
                 }
+            } else {
+                callback && callback.apply(callbackContext);//no "postInjection" method ; callback is triggered immediately
             }
             // ...and this method callback if one has been provider
         };
