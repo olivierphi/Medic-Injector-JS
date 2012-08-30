@@ -188,6 +188,11 @@
                 this._resolveModule(callback, context, forceAsync);
             }
 
+        } else {
+
+            // No injection mapping value resolution scheme found ; let's trigger an immediate callback with a 'null' value
+            this._triggerFunction(callback, [null], context, forceAsync);
+
         }
     };
 
@@ -588,6 +593,36 @@
             callback.apply(callbackContext, [newInstance]);
         };
         this.injectInto(newInstance, onInstanceReady, null, proceedToInjectionsInPostInjectionsMethodToo);
+    };
+
+    /**
+     * Replaces all "${injectionName}" patterns in the given String with the values of the matching Injections Mappings.
+     * For each `null` injection mapping value, an empty string is used instead of 'null'.
+     *
+     * @param {String} str
+     * @param {Function} callback
+     * @param {Object} [callbackContext=null]
+     */
+    Injector.prototype.parseStr = function (str, callback, callbackContext)
+    {
+        var requestedInjectionsNames = [];
+        str.replace(/\$\{([a-z0-9_]+)\}/ig, bind(function (fullStr, injectionName) {
+            if (!!this._mappings[injectionName]) {
+                requestedInjectionsNames.push(injectionName);
+            }
+            return fullStr;//don't replace anything for the moment...
+        }, this));
+
+        var onInjectionsResolution = function (resolvedInjectionsValues) {
+            for (var i = 0; i < requestedInjectionsNames.length; i++) {
+                var injectionName = requestedInjectionsNames[i]
+                    , injectionValue = (null === resolvedInjectionsValues[i]) ? '' : resolvedInjectionsValues[i] ;
+                str = str.replace('${' + injectionName + '}', injectionValue);
+            }
+            callback && callback.apply(callbackContext, [str]);
+        };
+
+        this.resolveInjections(requestedInjectionsNames, onInjectionsResolution, this);
     };
 
     /**

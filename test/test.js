@@ -31,6 +31,17 @@ describe('InjectionMapping', function(){
         });
     });// end "#toValue()" tests
 
+    describe('no resolution scheme', function(){
+        it('should immediately return `null`', function(done){
+            var injector = new Injector();
+            var injectionMapping = injector.addMapping('test');
+            injectionMapping.resolveInjection(function (injectionValue) {
+                assert.strictEqual(null, injectionValue);
+                done();
+            });
+        });
+    });// end "no resolution scheme" tests
+
     describe('#toProvider()', function(){
         it('should synchronously return the value when a sync callback result is used', function(done){
             var injector = new Injector();
@@ -700,5 +711,23 @@ describe('Injector', function(){
             }, callbackContext, true);//we enable the "proceedToInjectionsInPostInjectionsMethodToo" flag
         });
     });// end "#createInjectedInstance()" tests
+
+    describe('#parseStr()', function(){
+        it('should successfully replace ${injectionName} patterns', function(done){
+            var injector = new Injector();
+            injector.addMapping('injection1').toValue(10);
+            injector.addMapping('injection2').toProvider(function(callback) {
+                setTimeout(function () {
+                    callback(20);
+                }, 20);
+            });
+            injector.addMapping('injection3').toValue(null);
+            var sourceStr = '${injection1}::${injection2}::${injection3}';
+            injector.parseStr(sourceStr, function (injectedStr) {
+                assert.strictEqual('10::20::', injectedStr);
+                done();
+            });
+        });
+    });// end "#parseStr()" tests
 
 });//end "Injector" tests

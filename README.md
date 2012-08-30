@@ -137,6 +137,14 @@ Injections Mappings nested levels as you need, and handle asynchonous ones autom
 
 For asynchronous Providers you can mix the "callback" argument with others injections depencies arguments.
 
+You can also use injection on simple Strings, with the "${injectionName}" pattern:
+```javascript
+var sourceStr = '::${username}::${csrf}::';
+injector.parseStr(sourceStr, function (injectedStr) {
+    // injectedStr = '::john::eklm4p12::'
+});
+```
+
 Now that you've seen these simple examples, you may take a look at the following synopsis, which use all this and introduce
 a new Injection Mapping type, used with the "toModule()" method.
 
