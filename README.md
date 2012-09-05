@@ -23,7 +23,13 @@ It is bundled with Unit Tests and [API documentation](http://drbenton.github.com
 A lighter implementation is available too, with synchronous Injections values resolutions only. It is less powerful but
 it is much more simple to use, since every operation immediately return its result instead of triggering a callback.
 
-See the "medic-injector.sync.js" file and its unit tests for more information.
+You can look at the
+[medic-injector.sync.js](https://github.com/DrBenton/Medic-Injector-JS/blob/master/medic-injector.sync.js) file
+and [its unit tests](https://github.com/DrBenton/Medic-Injector-JS/blob/master/test/medic-injector.sync.js) for details,
+but it is just a "_immediate returned values instead of callbacks_" version of the Meic Injector full asynchronous library
+(without the ```toModule)``` mapping).
+
+The following Tutorial and Synopis use the full asynchronous version of Medic Injector.
 
 
 ## Tutorial
