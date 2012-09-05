@@ -10,7 +10,7 @@
     "authors": [
         "Dr. Benton (http://github.com/DrBenton)"
     ],
-    "main": "medic-injector.js",
+    "main": "index.js",
     "directories": {
         "test": "test"
     },

@@ -47,7 +47,7 @@ scheme:
 ```javascript
 
 // Injector instance creation
-var Injector = require('medic-injector');//with AMD you would use "require(['medic-injector'], function() { /*your code*/ })" instead
+var Injector = require('medic-injector').Injector;//with AMD you would use "require(['medic-injector'], function() { /*your code*/ })" instead
 var injector = new Injector();
 
 injector.addMapping('debug').toValue(true);//a first simple Injection Mapping

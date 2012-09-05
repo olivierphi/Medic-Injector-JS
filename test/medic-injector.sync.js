@@ -1,7 +1,7 @@
 
 var assert = require('assert');
 
-var InjectorLib = require('../medic-injector.sync')
+var InjectorLib = require('../index').InjectorSync
   , Injector = InjectorLib.MedicInjector;
 
 describe('InjectionMapping', function(){

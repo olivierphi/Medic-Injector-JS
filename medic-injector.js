@@ -432,6 +432,9 @@
     /**
      * Creates a new Injector instance.
      *
+     * Access this class with
+     * <code>var Injector = require('medic-injector').Injector;</code>
+     *
      * @class Injector
      * @constructor
      * @return {Injector}

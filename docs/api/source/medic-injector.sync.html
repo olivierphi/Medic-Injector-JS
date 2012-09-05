@@ -1,7 +1,24 @@
-/*
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">/*
  * This file is part of the Medic-Injector library.
  *
- * (c) Olivier Philippon <https://github.com/DrBenton>
+ * (c) Olivier Philippon &lt;https://github.com/DrBenton&gt;
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,16 +31,16 @@
 
     var myDebug = false;
 
-    /**
-     * @class InjectionMapping
+<span id='InjectionMapping'>    /**
+</span>     * @class InjectionMapping
      */
 
     var FORBIDDEN_INJECTIONS_NAMES = [
         'injectionValue'
     ];
 
-    /**
-     * You cant' use this constructor directly. Use Injector.addMapping to create a new "synchronous operations only"
+<span id='sync-InjectionMapping-method-constructor'><span id='sync-InjectionMapping'>    /**
+</span></span>     * You cant' use this constructor directly. Use Injector.addMapping to create a new &quot;synchronous operations only&quot;
      * Injection Mapping.
      *
      * @class sync.InjectionMapping
@@ -37,84 +54,84 @@
         if (! (injectorInstance instanceof Injector)) {
             throw new Error('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
         }
-        if (-1 < FORBIDDEN_INJECTIONS_NAMES.indexOf(injectionName)) {
-            throw new Error('Injection name "'+injectionName+'" is forbidden');
+        if (-1 &lt; FORBIDDEN_INJECTIONS_NAMES.indexOf(injectionName)) {
+            throw new Error('Injection name &quot;'+injectionName+'&quot; is forbidden');
         }
         this._injector = injectorInstance;
-        /**
-         *
+<span id='sync-InjectionMapping-property-injectionName'>        /**
+</span>         *
          * @type {String}
          */
         this.injectionName = injectionName;
     };
 
-    /**
-     * The simplest Injection Mapping type : each time a component will request this Injection Mapping injection, the
+<span id='sync-InjectionMapping-method-toValue'>    /**
+</span>     * The simplest Injection Mapping type : each time a component will request this Injection Mapping injection, the
      * target value will be injected.
      * Since this value is a plain Javascript scalar, Array or Object, it's shared in all the application and calling
      * #asSingleton on such an Injection Mapping is useless.
      *
      * @param value
-     * @return {sync.InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
+     * @return {sync.InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
      * @throws {Error}
      */
     InjectionMapping.prototype.toValue = function (value)
     {
-        this._sealed && this._throwSealedException();
+        this._sealed &amp;&amp; this._throwSealedException();
         this._toValue = value;
         return this;
     };
 
-    /**
-     * The Injection Mapping value will be resolved through a Provider function.
+<span id='sync-InjectionMapping-method-toProvider'>    /**
+</span>     * The Injection Mapping value will be resolved through a Provider function.
      *
      * @param {Function} injectionValueProviderFunction
-     * @return {sync.InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
+     * @return {sync.InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
      * @throws {Error}
      */
     InjectionMapping.prototype.toProvider = function (injectionValueProviderFunction)
     {
-        this._sealed && this._throwSealedException();
+        this._sealed &amp;&amp; this._throwSealedException();
         this._toProvider = injectionValueProviderFunction;
         return this;
     };
 
-    /**
-     * Each time this Injection Mapping value will be requested, a new instance of the target Javascript type will
+<span id='sync-InjectionMapping-method-toType'>    /**
+</span>     * Each time this Injection Mapping value will be requested, a new instance of the target Javascript type will
      * be created.
      * Use it with #asSingleton() to map a lazy-loaded shared instance to this Injection Mapping.
      *
      * @param {Function} javascriptType
-     * @return {sync.InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
+     * @return {sync.InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
      * @throws {Error}
      */
     InjectionMapping.prototype.toType = function (javascriptType)
     {
-        this._sealed && this._throwSealedException();
+        this._sealed &amp;&amp; this._throwSealedException();
         if (!(javascriptType instanceof Function))
         {
-            throw new Error('InjectionMapping.toType() argument must be a Javascript type (i.e. a function instantiable with "new")')
+            throw new Error('InjectionMapping.toType() argument must be a Javascript type (i.e. a function instantiable with &quot;new&quot;)')
         }
         this._toType = javascriptType;
         return this;
     };
 
-    /**
-     * When this method is called on an Injection Mapping, its resolution will be triggered the first time it is
+<span id='sync-InjectionMapping-method-asSingleton'>    /**
+</span>     * When this method is called on an Injection Mapping, its resolution will be triggered the first time it is
      * requested, but any subsequent call will use this first-time resolved value.
      *
-     * @return {sync.InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
+     * @return {sync.InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
      * @throws {Error}
      */
     InjectionMapping.prototype.asSingleton = function ()
     {
-        this._sealed && this._throwSealedException();
+        this._sealed &amp;&amp; this._throwSealedException();
         this._asSingleton = true;
         return this;
     };
 
-    /**
-     * Resolves the injection mapping.
+<span id='sync-InjectionMapping-method-resolveInjection'>    /**
+</span>     * Resolves the injection mapping.
      *
      * @return the Injection Mapping resolved value
      */
@@ -148,30 +165,30 @@
         return returnedValue;
     };
 
-    /**
-     * Seal this Injection mapping. Any subsequent call to any of the
-     * #toValue, "toProvider()" or "asSingleton()" methods will throw
+<span id='sync-InjectionMapping-method-seal'>    /**
+</span>     * Seal this Injection mapping. Any subsequent call to any of the
+     * #toValue, &quot;toProvider()&quot; or &quot;asSingleton()&quot; methods will throw
      * an Error.
      *
-     * @return {Object} returns a "unseal" key ; the only way to unseal this InjectionMapping it to call its "unseal()" method with this key
+     * @return {Object} returns a &quot;unseal&quot; key ; the only way to unseal this InjectionMapping it to call its &quot;unseal()&quot; method with this key
      * @throws {Error}
      * @see #unseal()
      */
     InjectionMapping.prototype.seal = function ()
     {
-        this._sealed && this._throwSealedException();
+        this._sealed &amp;&amp; this._throwSealedException();
         this._sealed = true;
         this._sealKey = {};
         return this._sealKey;
     };
 
-    /**
-     * Reverts the effect of <code>seal</code>, makes the mapping changeable again.
+<span id='sync-InjectionMapping-method-unseal'>    /**
+</span>     * Reverts the effect of &lt;code&gt;seal&lt;/code&gt;, makes the mapping changeable again.
      *
      * @param {Object} key The key to unseal the mapping. Has to be the instance returned by
-     * <code>seal()</code>
-     * @return {sync.InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to <code>seal</code>
+     * &lt;code&gt;seal()&lt;/code&gt;
+     * @return {sync.InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
+     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to &lt;code&gt;seal&lt;/code&gt;
      * @throws {Error} Can't unseal a mapping that's not sealed
      * @see #seal()
      */
@@ -189,8 +206,8 @@
         return this;
     };
 
-    /**
-     * If the #seal method has been called on this InjectionMapping, returns `true`
+<span id='sync-InjectionMapping-method-isSealed'>    /**
+</span>     * If the #seal method has been called on this InjectionMapping, returns `true`
      * @return {Boolean}
      */
     InjectionMapping.prototype.isSealed = function ()
@@ -198,8 +215,8 @@
         return this._sealed;
     };
 
-    /**
-     *
+<span id='sync-InjectionMapping-method-_throwSealedException'>    /**
+</span>     *
      * @private
      */
     InjectionMapping.prototype._throwSealedException = function ()
@@ -208,11 +225,11 @@
     };
 
     // Injector
-    /**
-     * Creates a new "synchronous operations only" Injector instance.
+<span id='sync-Injector-method-constructor'><span id='sync-Injector'>    /**
+</span></span>     * Creates a new &quot;synchronous operations only&quot; Injector instance.
      *
      * Access this class with
-     * <code>var Injector = require('medic-injector').InjectorSync;</code>
+     * &lt;code&gt;var Injector = require('medic-injector').InjectorSync;&lt;/code&gt;
      *
      * @class sync.Injector
      * @constructor
@@ -224,14 +241,14 @@
         return this;
     };
 
-    /**
-     * The name of the function to trigger in a custom JS type instance after the resolution of all its Injections Points.
+<span id='sync-Injector-property-instancePostInjectionsCallbackName'>    /**
+</span>     * The name of the function to trigger in a custom JS type instance after the resolution of all its Injections Points.
      * @property {String}
      */
     Injector.prototype.instancePostInjectionsCallbackName = 'postInjections';
 
-    /**
-     * Adds a new InjectionMapping to the Injector.
+<span id='sync-Injector-method-addMapping'>    /**
+</span>     * Adds a new InjectionMapping to the Injector.
      *
      * @param {String} injectionName
      * @return {sync.InjectionMapping}
@@ -239,15 +256,15 @@
     Injector.prototype.addMapping = function (injectionName)
     {
         if (!!this._mappings[injectionName]) {
-            throw new Error('Injection name "'+injectionName+'" is already used!');
+            throw new Error('Injection name &quot;'+injectionName+'&quot; is already used!');
         }
         var newInjectionMapping = new InjectionMapping(this, injectionName);
         this._mappings[injectionName] = newInjectionMapping;
         return newInjectionMapping;
     };
 
-    /**
-     * Removes an existing InjectionMapping.
+<span id='sync-Injector-method-removeMapping'>    /**
+</span>     * Removes an existing InjectionMapping.
      *
      * @param {String} injectionName
      * @return {sync.Injector}
@@ -255,15 +272,15 @@
      */
     Injector.prototype.removeMapping = function (injectionName)
     {
-        if (!!this._mappings[injectionName] && this._mappings[injectionName].isSealed()) {
-            throw new Error('Injection name "'+injectionName+'" is sealed and cannot be removed!');
+        if (!!this._mappings[injectionName] &amp;&amp; this._mappings[injectionName].isSealed()) {
+            throw new Error('Injection name &quot;'+injectionName+'&quot; is sealed and cannot be removed!');
         }
         delete this._mappings[injectionName];
         return this;
     };
 
-    /**
-     *
+<span id='sync-Injector-method-hasMapping'>    /**
+</span>     *
      * @param {String} injectionName
      * @return {Boolean}
      */
@@ -272,8 +289,8 @@
         return !!this._mappings[injectionName];
     };
 
-    /**
-     *
+<span id='sync-Injector-method-getMapping'>    /**
+</span>     *
      * @param {String} injectionName
      * @return {sync.InjectionMapping}
      */
@@ -282,8 +299,8 @@
         return this._mappings[injectionName] || null;
     };
 
-    /**
-     * Triggers the target function with the supplied context.
+<span id='sync-Injector-method-triggerFunctionWithInjectedParams'>    /**
+</span>     * Triggers the target function with the supplied context.
      * The function args are parsed, and for each of these args whose name equals a registered InjectionMapping name
      * the injection will be resolved and its value will fill the matching function arg value.
      *
@@ -293,15 +310,15 @@
      */
     Injector.prototype.triggerFunctionWithInjectedParams = function (func, context)
     {
-        myDebug && console && console.log('triggerFunctionWithInjectedParams() ; func=', func);
+        myDebug &amp;&amp; console &amp;&amp; console.log('triggerFunctionWithInjectedParams() ; func=', func);
         var functionArgsNames = getArgumentNames(func);
         var resolvedInjectionsValues = this.resolveInjections(functionArgsNames);
         return func.apply(context, resolvedInjectionsValues);
     };
 
 
-    /**
-     *
+<span id='sync-Injector-method-injectInto'>    /**
+</span>     *
      * @param {Object} jsTypeInstance
      * @param {Boolean} [proceedToInjectionsInPostInjectionsMethodToo=false]
      */
@@ -310,38 +327,38 @@
         // Let's scan this JS object instance for injection points...
         var propsToInject = [];
         for (var propName in jsTypeInstance) {
-            if (null === jsTypeInstance[propName] && !!this._mappings[propName]) {
+            if (null === jsTypeInstance[propName] &amp;&amp; !!this._mappings[propName]) {
                 // This instance property is null and its name matches a registered injection name
-                // --> let's handle it as an injection point!
+                // --&gt; let's handle it as an injection point!
                 propsToInject.push(propName);
             }
         }
 
         var resolvedInjectionsValues = this.resolveInjections(propsToInject);
 
-        for (var i = 0; i < resolvedInjectionsValues.length; i++) {
+        for (var i = 0; i &lt; resolvedInjectionsValues.length; i++) {
             var propName = propsToInject[i]
               , propValue = resolvedInjectionsValues[i];
             jsTypeInstance[propName] = propValue;//property injection!
         }
 
-        // Okay, now we may trigger the JS object instance "postInjection" method if it has one...
-        if (!!jsTypeInstance[this.instancePostInjectionsCallbackName] && (jsTypeInstance[this.instancePostInjectionsCallbackName] instanceof Function)) {
+        // Okay, now we may trigger the JS object instance &quot;postInjection&quot; method if it has one...
+        if (!!jsTypeInstance[this.instancePostInjectionsCallbackName] &amp;&amp; (jsTypeInstance[this.instancePostInjectionsCallbackName] instanceof Function)) {
             if (!proceedToInjectionsInPostInjectionsMethodToo) {
-                // Simple "postInjection" trigger
+                // Simple &quot;postInjection&quot; trigger
                 jsTypeInstance[this.instancePostInjectionsCallbackName].apply(jsTypeInstance);
             } else {
-                // We will look for injections in the "postInjection" method too!
+                // We will look for injections in the &quot;postInjection&quot; method too!
                 this.triggerFunctionWithInjectedParams(jsTypeInstance[this.instancePostInjectionsCallbackName], jsTypeInstance);
             }
         }
     };
 
-    /**
-     *
+<span id='sync-Injector-method-createInjectedInstance'>    /**
+</span>     *
      * @param {Function} jsType
      * @param {Boolean} [proceedToInjectionsInPostInjectionsMethodToo=false]
-     * @return a new instance of the given type, with its Injection Points resolved and its "post injections" callback triggered
+     * @return a new instance of the given type, with its Injection Points resolved and its &quot;post injections&quot; callback triggered
      */
     Injector.prototype.createInjectedInstance = function (jsType, proceedToInjectionsInPostInjectionsMethodToo)
     {
@@ -350,8 +367,8 @@
         return newInstance;
     };
 
-    /**
-     * Replaces all "${injectionName}" patterns in the given String with the values of the matching Injections Mappings.
+<span id='sync-Injector-method-parseStr'>    /**
+</span>     * Replaces all &quot;${injectionName}&quot; patterns in the given String with the values of the matching Injections Mappings.
      * For each `null` injection mapping value, an empty string is used instead of 'null'.
      *
      * @param {String} str
@@ -369,7 +386,7 @@
 
 
         var resolvedInjectionsValues = this.resolveInjections(requestedInjectionsNames);
-        for (var i = 0; i < requestedInjectionsNames.length; i++) {
+        for (var i = 0; i &lt; requestedInjectionsNames.length; i++) {
             var injectionName = requestedInjectionsNames[i]
               , injectionValue = (null === resolvedInjectionsValues[i]) ? '' : resolvedInjectionsValues[i] ;
             str = str.replace('${' + injectionName + '}', injectionValue);
@@ -378,8 +395,8 @@
         return str;
     };
 
-    /**
-     * Set the value of all public properties of the target JS object whose name is an injection mapping to "null".
+<span id='sync-Injector-method-cancelInjectionsInto'>    /**
+</span>     * Set the value of all public properties of the target JS object whose name is an injection mapping to &quot;null&quot;.
      * This lets you cancel the effect of #injectInto for clean garbage collection.
      *
      * @param {Object} jsTypeInstance
@@ -390,23 +407,23 @@
         for (var propName in jsTypeInstance) {
             if (!!this._mappings[propName]) {
                 // This instance property's name matches a registered injection name
-                // --> let's cancel this injection point
+                // --&gt; let's cancel this injection point
                 jsTypeInstance[propName] = null;
             }
         }
     };
 
-    /**
-     *
+<span id='sync-Injector-method-resolveInjections'>    /**
+</span>     *
      * @param {Array} injectionsNamesArray an Array of Strings
      * @return {Array} an Array of resolved Injections Mappings values
      */
     Injector.prototype.resolveInjections = function (injectionsNamesArray)
     {
-        myDebug && console && console.log('resolveInjections() ; injectionsNamesArray=', injectionsNamesArray);
+        myDebug &amp;&amp; console &amp;&amp; console.log('resolveInjections() ; injectionsNamesArray=', injectionsNamesArray);
         var resolvedInjectionPoints = [];
 
-        for (var i = 0; i < injectionsNamesArray.length; i++ ) {
+        for (var i = 0; i &lt; injectionsNamesArray.length; i++ ) {
 
             var currentInjectionName = injectionsNamesArray[i];
 
@@ -427,11 +444,11 @@
     // Library export
 
     if (typeof exports !== 'undefined') {
-        if (typeof module !== 'undefined' && module.exports) {
+        if (typeof module !== 'undefined' &amp;&amp; module.exports) {
             exports = module.exports = Injector;
         }
         exports.MedicInjector = Injector;
-    } else if (typeof define === "function" && define.amd) {
+    } else if (typeof define === &quot;function&quot; &amp;&amp; define.amd) {
         define('medic-injector-sync', [], function () { return Injector; } );
     } else {
         context['MedicInjectorSync'] = Injector;
@@ -440,8 +457,8 @@
 
     // Utils
     // Function reflection
-    /**
-     * From Prototype library
+<span id='sync-Injector-method-getArgumentNames'>    /**
+</span>     * From Prototype library
      * @see https://github.com/sstephenson/prototype/blob/master/src/prototype/lang/function.js
      *
      * Prototype JavaScript framework
@@ -459,12 +476,12 @@
         var names = fun.toString().match(/^[\s\(]*function[^(]*\(([^)]*)\)/)[1]
             .replace(/\/\/.*?[\r\n]|\/\*(?:.|[\r\n])*?\*\//g, '')
             .replace(/\s+/g, '').split(',');
-        return names.length == 1 && !names[0] ? [] : names;
+        return names.length == 1 &amp;&amp; !names[0] ? [] : names;
     };
 
     // Functions scope binding
-    /**
-     *
+<span id='sync-Injector-method-bind'>    /**
+</span>     *
      * @param {Function} func
      * @param {Object} context
      * @return {Function}
@@ -479,4 +496,6 @@
     };
 
 
-})(this);
+})(this);</pre>
+</body>
+</html>
