@@ -1,8 +1,8 @@
 
 var assert = require('assert');
 
-var InjectorLib = require('../index').Injector
-  , Injector = InjectorLib.MedicInjector;
+var InjectorLib = require('../index')
+  , Injector = InjectorLib.Injector;
 
 describe('InjectionMapping', function(){
 
