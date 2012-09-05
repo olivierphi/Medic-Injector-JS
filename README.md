@@ -44,8 +44,8 @@ During the first phase, you create "injection mappings". Each injection mapping 
 This value can be a Javascript scalar or object, but it can be bound to a more complex data source, like an asynchronous
 resource or a Node.js / AMD module. But we will see that later, for now let's look at the simplest dependency injection
 scheme:
-```javascript
 
+```javascript
 // Injector instance creation
 var Injector = require('medic-injector').Injector;//with AMD you would use "require(['medic-injector'], function() { /*your code*/ })" instead
 var injector = new Injector();
@@ -69,6 +69,7 @@ an ID matching the argument name. When an argument name matches an injection map
 will be automatically injected in this argument.
 
 We can also use injections points in a OOP code. With the same setup than the previous example, we can do this :
+
 ```javascript
 var Logger = function ()
 {
@@ -80,25 +81,26 @@ injector.injectInto(logger);
 
 After this "injectInto()" call, our Logger instance will have its "debug" property set to 'true'. The Logger can even
  call the injector itself:
- ```javascript
- var Logger = function ()
- {
-     this.debug = null;
-     this.postInjections = function () {
-        // If an "injected" object instance has a "postInjections" method, it will be automatically triggered
-        // after the injections resolution (injections mapping can be asynchronous).
-        // It can be considered as a "second constructor", called when you object instance is really ready, with all its
-        // injected dependencies resolved.
-        this.dispatchEvent('ready');
-     };
 
-     injector.injectInto(this);
+```javascript
+var Logger = function ()
+{
+ this.debug = null;
+ this.postInjections = function () {
+    // If an "injected" object instance has a "postInjections" method, it will be automatically triggered
+    // after the injections resolution (injections mapping can be asynchronous).
+    // It can be considered as a "second constructor", called when you object instance is really ready, with all its
+    // injected dependencies resolved.
+    this.dispatchEvent('ready');
  };
- ```
+
+ injector.injectInto(this);
+};
+```
 
 Ok, this 'debug' property was not a very interesting injection. Let's see something more advanced:
 
- ```javascript
+```javascript
 // a new "value" Injection Mapping...
 injector.addMapping('appConfig').toValue({
     mode: 'development',
@@ -122,6 +124,7 @@ to your Provider function, and the Medic Injector will consider the Provider as 
 instead of getting the return value of your Provider it will wait for a 'callback' call. When this function will be
 triggered by your Provider, it will have to call it with a single argument, which will be considered as the Injection Mapping
 value:
+
 ```javascript
 injector.addMapping('csrf').toProvider(function (callback) {
     CsrfGenerator.getNewToken(function (err, result) {
@@ -133,6 +136,7 @@ injector.addMapping('csrf').toProvider(function (callback) {
 Note that this Provider will be triggered each time this Injection Mapping is requested by one of your functions or one
 of your JS custome types. For some mappings you will probably want to trigger the Provider only once. Well, that's simple,
 you just have to add a "asSingleton()" call to your Injection Mapping:
+
 ```javascript
 // DB connection : it will be "lazy-triggered", only when the injection mapping is requested for the first time
 injector.addMapping('db')
@@ -155,6 +159,7 @@ Injections Mappings nested levels as you need, and handle asynchonous ones autom
 For asynchronous Providers you can mix the "callback" argument with others injections depencies arguments.
 
 You can also use injection on simple Strings, with the "${injectionName}" pattern:
+
 ```javascript
 var sourceStr = '::${username}::${csrf}::';
 injector.parseStr(sourceStr, function (injectedStr) {
@@ -236,8 +241,8 @@ injector.addMapping('currentUser')
 ```
 
 In a "app/subscribe-form.js" file, injection mappings use:
-```javascript
 
+```javascript
 var SubscribeForm = function () {
 
     // This prop value will be automatically set to the shared "mailer" instance
