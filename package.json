@@ -22,7 +22,7 @@
     "optionalDependencies": {
     },
     "scripts": {
-        "test": "mocha test/test.js"
+        "test": "mocha test/"
     },
     "keywords": [
         "dependency", "injection", "injector"

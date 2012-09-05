@@ -18,6 +18,14 @@ Backbone browser-side applications, etc.
 
 It is bundled with Unit Tests and [API documentation](http://drbenton.github.com/Medic-Injector-JS/api/).
 
+#### Medic Injector Sync
+
+A lighter implementation is available too, with synchronous Injections values resolutions only. It is less powerful but
+it is much more simple to use, since every operation immediately return its result instead of triggering a callback.
+
+See the "medic-injector.sync.js" file and its unit tests for more information.
+
+
 ## Tutorial
 
 There are two main phases to properly use this library : a "injection mappings" setup, then a "injections points" use in your
@@ -248,11 +256,11 @@ module.exports = SubscribeForm;
 
 ## API
 
-See te API here : http://drbenton.github.com/Medic-Injector-JS/api/
+See the API here : http://drbenton.github.com/Medic-Injector-JS/api/
 
 The API is generated with [JSDuck](https://github.com/senchalabs/jsduck) with the following command:
 
-    $ jsduck --output docs/api/ medic-injector.js
+    $ jsduck --output docs/api/ medic-injector.js medic-injector.sync.js
 
 
 ## Running Tests

@@ -2,8 +2,7 @@
 var assert = require('assert');
 
 var InjectorLib = require('../medic-injector')
-  , Injector = InjectorLib.MedicInjector
-  , InjectionMapping = InjectorLib.MedicInjectionMapping;
+  , Injector = InjectorLib.MedicInjector;
 
 describe('InjectionMapping', function(){
 
