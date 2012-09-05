@@ -4,14 +4,15 @@
 
 Medic Injector is a Javascript transcription of the great [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders)
 light-weight ActionScript IoC container - coupled with the [RobotLegs](http://www.robotlegs.org/) framework, it's one of the
-technologies I enjoyed the most, and I hope you will enjoy using this Javascript portage too!
+technologies I have enjoyed working with the most, and I hope you will enjoy using this Javascript version too!
 
 It lets you wire your application components in a very simple and intuitive way.
 
 You setup your Injection Mappings once, and then use them everywhere you want in your application, without any overhead -
 Injections Points are recognized only from functions arguments names and Javascript objects instances properties names.
 
-It can be used in Node.js and in the browser. If you use [Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD)
+It can be used in Node.js and in the browser. If you use
+[Asynchronous Module Definition](https://github.com/amdjs/amdjs-api/wiki/AMD)
 in your client-side Javascript app, it will be particulary easy to add Medic Injector.
 It is a very agnostic tool, which can be used in vanilla JS, Express server-side applications,
 Backbone browser-side applications, etc.
@@ -23,11 +24,13 @@ It is bundled with Unit Tests and [API documentation](http://drbenton.github.com
 A lighter implementation is available too, with synchronous Injections values resolutions only. It is less powerful but
 it is much more simple to use, since every operation immediately return its result instead of triggering a callback.
 
+It's only 4kb when minified with UglifyJS.
+
 You can look at the
 [medic-injector.sync.js](https://github.com/DrBenton/Medic-Injector-JS/blob/master/medic-injector.sync.js) file
 and [its unit tests](https://github.com/DrBenton/Medic-Injector-JS/blob/master/test/medic-injector.sync.js) for details,
-but it is just a "_immediate returned values instead of callbacks_" version of the Meic Injector full asynchronous library
-(without the ```toModule)``` mapping).
+but it is just a "_immediate returned values instead of callbacks_" version of the Medic Injector full asynchronous library
+(without the ```toModule()``` mapping, since it couldn't be synchronous in a browser AMD context).
 
 The following Tutorial and Synopis use the full asynchronous version of Medic Injector.
 
