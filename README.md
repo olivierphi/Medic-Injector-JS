@@ -3,8 +3,8 @@
 [![build status](https://secure.travis-ci.org/DrBenton/Medic-Injector-JS.png)](http://travis-ci.org/DrBenton/Medic-Injector-JS)
 
 Medic Injector is a Javascript transcription of the great [SwiftSuspenders](https://github.com/tschneidereit/SwiftSuspenders)
-light-weight ActionScript IoC container - coupled with the [RobotLegs](http://www.robotlegs.org/) framework, it's one of the
-technologies I have enjoyed working with the most, and I hope you will enjoy using this Javascript version too!
+light-weight ActionScript IoC container - coupled with the [RobotLegs](http://www.robotlegs.org/) framework, this is one of
+the technologies with which I most enjoyed working, and I hope you will enjoy using this Javascript version too!
 
 It lets you wire your application components in a very simple and intuitive way.
 
