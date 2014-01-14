@@ -14,10 +14,6 @@
 
     var myDebug = false;
 
-    /**
-     * @class InjectionMapping
-     */
-
     var FORBIDDEN_INJECTIONS_NAMES = [
         'callback',
         'injectionValue'
@@ -27,6 +23,7 @@
     /**
      *
      * @class InjectorError
+     * @ignore
      */
     var InjectorError = function(message) {
         this.name = "InjectorError";
@@ -37,6 +34,7 @@
     /**
      *
      * @class InjectionMappingError
+     * @ignore
      */
     var InjectionMappingError = function(message) {
         this.name = "InjectionMappingError";
@@ -47,6 +45,7 @@
     /**
      *
      * @class SealedInjectionError
+     * @ignore
      */
     var SealedInjectionError = function(message) {
         this.name = "SealedInjectionError";
@@ -57,7 +56,7 @@
     
 
     /**
-     * You cant' use this constructor directly. Use Injector.addMapping to create a new Injection Mapping.
+     * You cant' use this constructor directly. Use {@link Injector#addMapping} to create a new Injection Mapping.
      *
      * @class InjectionMapping
      * @constructor
@@ -85,7 +84,7 @@
      * The simplest Injection Mapping type : each time a component will request this Injection Mapping injection, the
      * target value will be injected.
      * Since this value is a plain Javascript scalar, Array or Object, it's shared in all the application and calling
-     * #asSingleton on such an Injection Mapping is useless.
+     * {@link #asSingleton} on such an Injection Mapping is useless.
      *
      * @param value
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
@@ -116,7 +115,7 @@
     /**
      * Each time this Injection Mapping value will be requested, a new instance of the target Javascript type will
      * be created.
-     * Use it with #asSingleton() to map a lazy-loaded shared instance to this Injection Mapping.
+     * Use it with {@link #asSingleton} to map a lazy-loaded shared instance to this Injection Mapping.
      *
      * @param {Function} javascriptType
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
@@ -231,10 +230,10 @@
 
     /**
      * Seal this Injection mapping. Any subsequent call to any of the
-     * #toValue, "toProvider()", "toModule" or "asSingleton()" methods will throw
+     * {@link #toValue}, {@link #toProvider}, {@link #toModule} or {@link #asSingleton} methods will throw
      * an Error.
      *
-     * @return {Object} returns a "unseal" key ; the only way to unseal this InjectionMapping it to call its "unseal()" method with this key
+     * @return {Object} returns a "unseal" key ; the only way to unseal this InjectionMapping it to call its {@link #unseal} method with this key
      * @throws {Error}
      * @see #unseal()
      */
@@ -247,12 +246,12 @@
     };
 
     /**
-     * Reverts the effect of <code>seal</code>, makes the mapping changeable again.
+     * Reverts the effect of {@link #seal}, makes the mapping changeable again.
      *
      * @param {Object} key The key to unseal the mapping. Has to be the instance returned by
-     * <code>seal()</code>
+     * {@link #seal}
      * @return {InjectionMapping} The <code>InjectionMapping</code> the method is invoked on
-     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to <code>seal</code>
+     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to {@link #seal}
      * @throws {Error} Can't unseal a mapping that's not sealed
      * @see #seal()
      */
@@ -271,7 +270,7 @@
     };
 
     /**
-     * If the #seal method has been called on this InjectionMapping, returns `true`
+     * If the {@link #seal} method has been called on this InjectionMapping, returns `true`
      * @return {Boolean}
      */
     InjectionMapping.prototype.isSealed = function ()
