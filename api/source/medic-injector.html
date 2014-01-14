@@ -31,17 +31,49 @@
 
     var myDebug = false;
 
-<span id='InjectionMapping'>    /**
-</span>     * @class InjectionMapping
-     */
-
     var FORBIDDEN_INJECTIONS_NAMES = [
         'callback',
         'injectionValue'
     ];
+    
+    // Custom Errors
+<span id='InjectorError'>    /**
+</span>     *
+     * @class InjectorError
+     * @ignore
+     */
+    var InjectorError = function(message) {
+        this.name = &quot;InjectorError&quot;;
+        this.message = message;
+    }
+    InjectorError.prototype = new Error();
+    InjectorError.prototype.constructor = InjectorError;
+<span id='InjectionMappingError'>    /**
+</span>     *
+     * @class InjectionMappingError
+     * @ignore
+     */
+    var InjectionMappingError = function(message) {
+        this.name = &quot;InjectionMappingError&quot;;
+        this.message = message;
+    }
+    InjectionMappingError.prototype = new Error();
+    InjectionMappingError.prototype.constructor = InjectionMappingError;
+<span id='SealedInjectionError'>    /**
+</span>     *
+     * @class SealedInjectionError
+     * @ignore
+     */
+    var SealedInjectionError = function(message) {
+        this.name = &quot;SealedInjectionError&quot;;
+        this.message = message;
+    }
+    SealedInjectionError.prototype = new Error();
+    SealedInjectionError.prototype.constructor = SealedInjectionError;
+    
 
 <span id='InjectionMapping-method-constructor'><span id='InjectionMapping'>    /**
-</span></span>     * You cant' use this constructor directly. Use Injector.addMapping to create a new Injection Mapping.
+</span></span>     * You cant' use this constructor directly. Use {@link Injector#addMapping} to create a new Injection Mapping.
      *
      * @class InjectionMapping
      * @constructor
@@ -52,10 +84,10 @@
     var InjectionMapping = function (injectorInstance, injectionName)
     {
         if (! (injectorInstance instanceof Injector)) {
-            throw new Error('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
+            throw new InjectionMappingError('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
         }
         if (-1 &lt; FORBIDDEN_INJECTIONS_NAMES.indexOf(injectionName)) {
-            throw new Error('Injection name &quot;'+injectionName+'&quot; is forbidden');
+            throw new InjectionMappingError('Injection name &quot;'+injectionName+'&quot; is forbidden');
         }
         this._injector = injectorInstance;
 <span id='InjectionMapping-property-injectionName'>        /**
@@ -69,7 +101,7 @@
 </span>     * The simplest Injection Mapping type : each time a component will request this Injection Mapping injection, the
      * target value will be injected.
      * Since this value is a plain Javascript scalar, Array or Object, it's shared in all the application and calling
-     * #asSingleton on such an Injection Mapping is useless.
+     * {@link #asSingleton} on such an Injection Mapping is useless.
      *
      * @param value
      * @return {InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
@@ -100,7 +132,7 @@
 <span id='InjectionMapping-method-toType'>    /**
 </span>     * Each time this Injection Mapping value will be requested, a new instance of the target Javascript type will
      * be created.
-     * Use it with #asSingleton() to map a lazy-loaded shared instance to this Injection Mapping.
+     * Use it with {@link #asSingleton} to map a lazy-loaded shared instance to this Injection Mapping.
      *
      * @param {Function} javascriptType
      * @return {InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
@@ -111,7 +143,7 @@
         this._sealed &amp;&amp; this._throwSealedException();
         if (!(javascriptType instanceof Function))
         {
-            throw new Error('InjectionMapping.toType() argument must be a Javascript type (i.e. a function instantiable with &quot;new&quot;)')
+            throw new InjectionMappingError('InjectionMapping.toType() argument must be a Javascript type (i.e. a function instantiable with &quot;new&quot;)')
         }
         this._toType = javascriptType;
         return this;
@@ -215,10 +247,10 @@
 
 <span id='InjectionMapping-method-seal'>    /**
 </span>     * Seal this Injection mapping. Any subsequent call to any of the
-     * #toValue, &quot;toProvider()&quot;, &quot;toModule&quot; or &quot;asSingleton()&quot; methods will throw
+     * {@link #toValue}, {@link #toProvider}, {@link #toModule} or {@link #asSingleton} methods will throw
      * an Error.
      *
-     * @return {Object} returns a &quot;unseal&quot; key ; the only way to unseal this InjectionMapping it to call its &quot;unseal()&quot; method with this key
+     * @return {Object} returns a &quot;unseal&quot; key ; the only way to unseal this InjectionMapping it to call its {@link #unseal} method with this key
      * @throws {Error}
      * @see #unseal()
      */
@@ -231,23 +263,23 @@
     };
 
 <span id='InjectionMapping-method-unseal'>    /**
-</span>     * Reverts the effect of &lt;code&gt;seal&lt;/code&gt;, makes the mapping changeable again.
+</span>     * Reverts the effect of {@link #seal}, makes the mapping changeable again.
      *
      * @param {Object} key The key to unseal the mapping. Has to be the instance returned by
-     * &lt;code&gt;seal()&lt;/code&gt;
+     * {@link #seal}
      * @return {InjectionMapping} The &lt;code&gt;InjectionMapping&lt;/code&gt; the method is invoked on
-     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to &lt;code&gt;seal&lt;/code&gt;
+     * @throws {Error} Has to be invoked with the unique key object returned by an earlier call to {@link #seal}
      * @throws {Error} Can't unseal a mapping that's not sealed
      * @see #seal()
      */
     InjectionMapping.prototype.unseal = function (key)
     {
         if (!this._sealed) {
-            throw new Error('Can\'t unseal a non-sealed mapping.');
+            throw new SealedInjectionError('Can\'t unseal a non-sealed mapping.');
         }
         if (key !== this._sealKey)
         {
-            throw new InjectorError('Can\'t unseal mapping without the correct key.');
+            throw new SealedInjectionError('Can\'t unseal mapping without the correct key.');
         }
         this._sealed = false;
         this._sealKey = null;
@@ -255,7 +287,7 @@
     };
 
 <span id='InjectionMapping-method-isSealed'>    /**
-</span>     * If the #seal method has been called on this InjectionMapping, returns `true`
+</span>     * If the {@link #seal} method has been called on this InjectionMapping, returns `true`
      * @return {Boolean}
      */
     InjectionMapping.prototype.isSealed = function ()
@@ -371,7 +403,7 @@
             // The injection value will be injected to its &quot;injectionValue&quot; arg
             var injectionValueArgIndex = callbackArgsNames.indexOf('injectionValue');
             if (-1 === injectionValueArgIndex) {
-                throw new Error('An injection resolution callback function with more than 1 argument *must* have a &quot;injectionValue&quot; arg!');
+                throw new InjectionMappingError('An injection resolution callback function with more than 1 argument *must* have a &quot;injectionValue&quot; arg!');
             }
             var onInjectionsResolution = bind(function (resolvedInjectionsValues) {
                 resolvedInjectionsValues[injectionValueArgIndex] = injectionResolvedValue;//we insert our injection value in the callback &quot;injectionValue&quot; arg
@@ -392,7 +424,7 @@
     InjectionMapping.prototype._resolveModule = function (callback, context, forceAsync)
     {
         if (typeof require === &quot;undefined&quot;) {
-            throw new Error('Module resolution can be used only when a global &quot;require&quot; method exists (i.e. in Node.js or when using AMD');
+            throw new InjectionMappingError('Module resolution can be used only when a global &quot;require&quot; method exists (i.e. in Node.js or when using AMD');
         }
 
         if (typeof module !== &quot;undefined&quot; &amp;&amp; typeof process !== &quot;undefined&quot;) {
@@ -442,7 +474,7 @@
      */
     InjectionMapping.prototype._throwSealedException = function ()
     {
-        throw new Error('Modifications on a sealed InjectionMapping is forbidden!');
+        throw new SealedInjectionError('Modifications on a sealed InjectionMapping is forbidden!');
     };
 
     // Injector
@@ -477,7 +509,7 @@
     Injector.prototype.addMapping = function (injectionName)
     {
         if (!!this._mappings[injectionName]) {
-            throw new Error('Injection name &quot;'+injectionName+'&quot; is already used!');
+            throw new InjectorError('Injection name &quot;'+injectionName+'&quot; is already used!');
         }
         var newInjectionMapping = new InjectionMapping(this, injectionName);
         this._mappings[injectionName] = newInjectionMapping;
@@ -494,7 +526,7 @@
     Injector.prototype.removeMapping = function (injectionName)
     {
         if (!!this._mappings[injectionName] &amp;&amp; this._mappings[injectionName].isSealed()) {
-            throw new Error('Injection name &quot;'+injectionName+'&quot; is sealed and cannot be removed!');
+            throw new InjectorError('Injection name &quot;'+injectionName+'&quot; is sealed and cannot be removed!');
         }
         delete this._mappings[injectionName];
         return this;
@@ -520,7 +552,7 @@
         return this._mappings[injectionName] || null;
     };
 
-<span id='Injector-method-triggerFunctionWithInjectedParams'>    /**
+<span id='Injector-method-trigger'>    /**
 </span>     * Triggers the target function with the supplied context.
      * The function args are parsed, and for each of these args whose name equals a registered InjectionMapping name
      * the injection will be resolved and its value will fill the matching function arg value.
@@ -530,10 +562,11 @@
      * @param {Boolean} [forceAsync=false]
      * @param {Function} [callback=null]
      * @param {Object} [callbackContext=null]
+     * @alias triggerFunctionWithInjectedParams
      */
-    Injector.prototype.triggerFunctionWithInjectedParams = function (func, context, forceAsync, callback, callbackContext)
+    Injector.prototype.trigger = function (func, context, forceAsync, callback, callbackContext)
     {
-        myDebug &amp;&amp; console &amp;&amp; console.log('triggerFunctionWithInjectedParams() ; func=', func);
+        myDebug &amp;&amp; console &amp;&amp; console.log('trigger() ; func=', func);
         var functionArgsNames = getArgumentNames(func);
         var injectionsValues;
         var triggerFunction = function () {
@@ -550,6 +583,9 @@
         };
         this.resolveInjections(functionArgsNames, onInjectionsResolution, this);
     };
+  
+    // Alias for backward compatibility
+    Injector.prototype.triggerFunctionWithInjectedParams = Injector.prototype.trigger;
 
 
 <span id='Injector-method-injectInto'>    /**
