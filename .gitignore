@@ -2,3 +2,5 @@
 /.vagrant/
 
 node_modules/
+
+/docs/api/
