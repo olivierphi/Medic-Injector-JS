@@ -1,34 +1,34 @@
 {
-    "name": "medic-injector",
-    "description": "A light-weight Javascript Dependency Injection tool, strongly inspired by the great ActionScript3 RobotLegs & SwiftSuspenders frameworks",
-    "version": "0.2.4",
-    "homepage": "https://github.com/DrBenton/Medic-Injector-JS",
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/DrBenton/Medic-Injector-JS.git"
-    },
-    "authors": [
-        "Dr. Benton (http://github.com/DrBenton)"
-    ],
-    "main": "index.js",
-    "directories": {
-        "test": "test"
-    },
-    "dependencies": {
-    },
-    "devDependencies": {
-        "mocha": "*"
-    },
-    "optionalDependencies": {
-    },
-    "scripts": {
-        "test": "mocha test/"
-    },
-    "keywords": [
-        "dependency", "injection", "injector"
-    ],
-    "engines": {
-        "node": ">= 0.6"
-    },
-    "# vim: ts=2 sw=2 et ": null
+  "name": "medic-injector",
+  "description": "A light-weight Javascript Dependency Injection tool, strongly inspired by the great ActionScript3 RobotLegs & SwiftSuspenders frameworks",
+  "version": "0.2.4",
+  "homepage": "https://github.com/DrBenton/Medic-Injector-JS",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/DrBenton/Medic-Injector-JS.git"
+  },
+  "authors": [
+    "Olivier Philippon (http://github.com/DrBenton)"
+  ],
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "~1.17.0",
+    "chai": "~1.8.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "dependency",
+    "injection",
+    "injector"
+  ],
+  "engines": {
+    "node": ">= 0.6"
+  },
+  "# vim: ts=2 sw=2 et ": null
 }

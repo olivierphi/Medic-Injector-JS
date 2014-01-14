@@ -22,6 +22,38 @@
         'injectionValue'
     ];
 
+    // Custom Errors
+    /**
+     *
+     * @class InjectorError
+     */
+    var InjectorError = function(message) {
+        this.name = "InjectorError";
+        this.message = message;
+    }
+    InjectorError.prototype = new Error();
+    InjectorError.prototype.constructor = InjectorError;
+    /**
+     *
+     * @class InjectionMappingError
+     */
+    var InjectionMappingError = function(message) {
+        this.name = "InjectionMappingError";
+        this.message = message;
+    }
+    InjectionMappingError.prototype = new Error();
+    InjectionMappingError.prototype.constructor = InjectionMappingError;
+    /**
+     *
+     * @class SealedInjectionError
+     */
+    var SealedInjectionError = function(message) {
+        this.name = "SealedInjectionError";
+        this.message = message;
+    }
+    SealedInjectionError.prototype = new Error();
+    SealedInjectionError.prototype.constructor = SealedInjectionError;
+
     /**
      * You cant' use this constructor directly. Use Injector.addMapping to create a new "synchronous operations only"
      * Injection Mapping.
@@ -35,10 +67,10 @@
     var InjectionMapping = function (injectorInstance, injectionName)
     {
         if (! (injectorInstance instanceof Injector)) {
-            throw new Error('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
+            throw new InjectionMappingError('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
         }
         if (-1 < FORBIDDEN_INJECTIONS_NAMES.indexOf(injectionName)) {
-            throw new Error('Injection name "'+injectionName+'" is forbidden');
+            throw new InjectionMappingError('Injection name "'+injectionName+'" is forbidden');
         }
         this._injector = injectorInstance;
         /**
@@ -290,14 +322,18 @@
      * @param {Function} func
      * @param {Object} [context=null]
      * @return the function returned value
+     * @alias triggerFunctionWithInjectedParams
      */
-    Injector.prototype.triggerFunctionWithInjectedParams = function (func, context)
+    Injector.prototype.trigger = function (func, context)
     {
         myDebug && console && console.log('triggerFunctionWithInjectedParams() ; func=', func);
         var functionArgsNames = getArgumentNames(func);
         var resolvedInjectionsValues = this.resolveInjections(functionArgsNames);
         return func.apply(context, resolvedInjectionsValues);
     };
+
+    // Alias for backward compatibility
+    Injector.prototype.triggerFunctionWithInjectedParams = Injector.prototype.trigger;
 
 
     /**

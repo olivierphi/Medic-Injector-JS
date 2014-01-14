@@ -22,6 +22,39 @@
         'callback',
         'injectionValue'
     ];
+    
+    // Custom Errors
+    /**
+     *
+     * @class InjectorError
+     */
+    var InjectorError = function(message) {
+        this.name = "InjectorError";
+        this.message = message;
+    }
+    InjectorError.prototype = new Error();
+    InjectorError.prototype.constructor = InjectorError;
+    /**
+     *
+     * @class InjectionMappingError
+     */
+    var InjectionMappingError = function(message) {
+        this.name = "InjectionMappingError";
+        this.message = message;
+    }
+    InjectionMappingError.prototype = new Error();
+    InjectionMappingError.prototype.constructor = InjectionMappingError;
+    /**
+     *
+     * @class SealedInjectionError
+     */
+    var SealedInjectionError = function(message) {
+        this.name = "SealedInjectionError";
+        this.message = message;
+    }
+    SealedInjectionError.prototype = new Error();
+    SealedInjectionError.prototype.constructor = SealedInjectionError;
+    
 
     /**
      * You cant' use this constructor directly. Use Injector.addMapping to create a new Injection Mapping.
@@ -35,10 +68,10 @@
     var InjectionMapping = function (injectorInstance, injectionName)
     {
         if (! (injectorInstance instanceof Injector)) {
-            throw new Error('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
+            throw new InjectionMappingError('Don\'t instantiate InjectionMapping directly ; use Injector#addMapping to create InjectionMappings!');
         }
         if (-1 < FORBIDDEN_INJECTIONS_NAMES.indexOf(injectionName)) {
-            throw new Error('Injection name "'+injectionName+'" is forbidden');
+            throw new InjectionMappingError('Injection name "'+injectionName+'" is forbidden');
         }
         this._injector = injectorInstance;
         /**
@@ -94,7 +127,7 @@
         this._sealed && this._throwSealedException();
         if (!(javascriptType instanceof Function))
         {
-            throw new Error('InjectionMapping.toType() argument must be a Javascript type (i.e. a function instantiable with "new")')
+            throw new InjectionMappingError('InjectionMapping.toType() argument must be a Javascript type (i.e. a function instantiable with "new")')
         }
         this._toType = javascriptType;
         return this;
@@ -226,11 +259,11 @@
     InjectionMapping.prototype.unseal = function (key)
     {
         if (!this._sealed) {
-            throw new Error('Can\'t unseal a non-sealed mapping.');
+            throw new SealedInjectionError('Can\'t unseal a non-sealed mapping.');
         }
         if (key !== this._sealKey)
         {
-            throw new InjectorError('Can\'t unseal mapping without the correct key.');
+            throw new SealedInjectionError('Can\'t unseal mapping without the correct key.');
         }
         this._sealed = false;
         this._sealKey = null;
@@ -354,7 +387,7 @@
             // The injection value will be injected to its "injectionValue" arg
             var injectionValueArgIndex = callbackArgsNames.indexOf('injectionValue');
             if (-1 === injectionValueArgIndex) {
-                throw new Error('An injection resolution callback function with more than 1 argument *must* have a "injectionValue" arg!');
+                throw new InjectionMappingError('An injection resolution callback function with more than 1 argument *must* have a "injectionValue" arg!');
             }
             var onInjectionsResolution = bind(function (resolvedInjectionsValues) {
                 resolvedInjectionsValues[injectionValueArgIndex] = injectionResolvedValue;//we insert our injection value in the callback "injectionValue" arg
@@ -375,7 +408,7 @@
     InjectionMapping.prototype._resolveModule = function (callback, context, forceAsync)
     {
         if (typeof require === "undefined") {
-            throw new Error('Module resolution can be used only when a global "require" method exists (i.e. in Node.js or when using AMD');
+            throw new InjectionMappingError('Module resolution can be used only when a global "require" method exists (i.e. in Node.js or when using AMD');
         }
 
         if (typeof module !== "undefined" && typeof process !== "undefined") {
@@ -425,7 +458,7 @@
      */
     InjectionMapping.prototype._throwSealedException = function ()
     {
-        throw new Error('Modifications on a sealed InjectionMapping is forbidden!');
+        throw new SealedInjectionError('Modifications on a sealed InjectionMapping is forbidden!');
     };
 
     // Injector
@@ -460,7 +493,7 @@
     Injector.prototype.addMapping = function (injectionName)
     {
         if (!!this._mappings[injectionName]) {
-            throw new Error('Injection name "'+injectionName+'" is already used!');
+            throw new InjectorError('Injection name "'+injectionName+'" is already used!');
         }
         var newInjectionMapping = new InjectionMapping(this, injectionName);
         this._mappings[injectionName] = newInjectionMapping;
@@ -477,7 +510,7 @@
     Injector.prototype.removeMapping = function (injectionName)
     {
         if (!!this._mappings[injectionName] && this._mappings[injectionName].isSealed()) {
-            throw new Error('Injection name "'+injectionName+'" is sealed and cannot be removed!');
+            throw new InjectorError('Injection name "'+injectionName+'" is sealed and cannot be removed!');
         }
         delete this._mappings[injectionName];
         return this;
@@ -513,10 +546,11 @@
      * @param {Boolean} [forceAsync=false]
      * @param {Function} [callback=null]
      * @param {Object} [callbackContext=null]
+     * @alias triggerFunctionWithInjectedParams
      */
-    Injector.prototype.triggerFunctionWithInjectedParams = function (func, context, forceAsync, callback, callbackContext)
+    Injector.prototype.trigger = function (func, context, forceAsync, callback, callbackContext)
     {
-        myDebug && console && console.log('triggerFunctionWithInjectedParams() ; func=', func);
+        myDebug && console && console.log('trigger() ; func=', func);
         var functionArgsNames = getArgumentNames(func);
         var injectionsValues;
         var triggerFunction = function () {
@@ -533,6 +567,9 @@
         };
         this.resolveInjections(functionArgsNames, onInjectionsResolution, this);
     };
+  
+    // Alias for backward compatibility
+    Injector.prototype.triggerFunctionWithInjectedParams = Injector.prototype.trigger;
 
 
     /**

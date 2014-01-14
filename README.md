@@ -58,7 +58,7 @@ function displayHomepage (debug) {
 }
 
 // And later again
-injector.triggerFunctionWithInjectedParams(displayHomepage);
+injector.trigger(displayHomepage);
 ```
 
 What did we do? We just created an instance of a Medic Injector, and added a single Injection Mapping to , with a 'debug'
