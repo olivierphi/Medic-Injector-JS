@@ -279,7 +279,7 @@ The API is generated with [JSDuck](https://github.com/senchalabs/jsduck) with th
 
 ## Running Tests
 
-To run the test suite you will need to have the [Mocha](http://visionmedia.github.com/mocha/) library globally installed.
+To run the test suite you will need to have the [Mocha](http://mochajs.org/) library globally installed.
 If you don't already have it, just invoke the following command:
 
     $ npm install -g mocha
